@@ -1,0 +1,22 @@
+---
+format:
+  pdf:
+    documentclass: standalone
+---
+
+```{mermaid}
+stateDiagram-v2
+    direction LR
+
+    state "State 0<br>No dependency" as S0
+    state "State 1<br>Mild dependency" as S1
+    state "State 2<br>Moderate dependency" as S2
+    state "State 3<br>Severe dependency" as S3
+
+    S0 --> S1
+    S1 --> S2
+    S2 --> S3
+    S0 --> S2
+    S1 --> S3
+    S0 --> S3
+```

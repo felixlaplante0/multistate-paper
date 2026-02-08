@@ -1,0 +1,17 @@
+---
+format: pdf
+documentclass: standalone
+---
+
+```{mermaid}
+stateDiagram-v2
+    direction LR
+
+    state "Healthy (0)" as H
+    state "Sick (1)" as S
+    state "Terminal Stage (2)" as T
+
+    H --> S
+    H --> T
+    S --> T
+```
