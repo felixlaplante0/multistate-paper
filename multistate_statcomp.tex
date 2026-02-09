@@ -55,13 +55,13 @@ Joint modeling of longitudinal and time-to-event data has become an essential to
 
 Multi-state models represent an overall joint process of clinical course as a series of discrete stages or health states that occur sequentially \citep{lovblom2024modeling}. In biostatistics, these models are widely used for survival and reliability analysis, allowing for a richer and more accurate representation by capturing alternative paths to an event of interest, intermediate events, and progressive disease. Key components of multi-state models include transition intensity functions, which denote the instantaneous risk of moving from one state to another, and transition probability functions, which describe the probability of transition over longer intervals. Often, these models assume the Markov property, where future transitions depend only on the current state, simplifying the transition intensity functions \citep{asanjarani2022estimation}. This assumption can be relaxed by adopting a semi-Markov formulation, in which the transition probabilities depend not only on the current state but also on the sojourn time, effectively resetting the time scale after each transition.
 
-The link between multi-state models and joint models arises when a multi-state process is integrated as a component within a broader joint modeling framework . While multi-state models, such as those described in the ``sequential state framework'' primarily focus on movements between discrete states, joint models operate under a ``parallel trajectory framework'' that combines a longitudinal process with a time-to-event process.
+The link between multi-state models and joint models arises when a multi-state process is integrated as a component within a broader joint modeling framework. While multi-state models, such as those described in the ``sequential state framework'' primarily focus on movements between discrete states, joint models operate under a ``parallel trajectory framework'' that combines a longitudinal process with a time-to-event process.
 
 The model proposed by Ferrer et al.~\citep{ferrer2016joint} exemplifies this link by presenting a joint model for a longitudinal process (e.g., Prostate-Specific Antigen (PSA) measurements) and a multi-state process (e.g., clinical progressions in prostate cancer). These two sub-models are interconnected by shared random effects, allowing the model to account for the correlation between a continuous longitudinal biomarker trajectory and acyclic discrete transitions between health states. Specifically, the previously proposed mechanism \citep{ferrer2016joint, you2024joint} is based on binary censoring indicators for each state, implying that any given state can be entered at most once, therefore precluding the modeling of recurrent events.
 
 The model we propose operates on an arbitrary directed graph, enabling representation of complex state transitions and recurrent events. We derive the complete likelihood for the nonlinear joint model, introduce an efficient stochastic approximation inference method, and develop dynamic prediction tools. To illustrate its practical relevance, we conduct both a simulation study and a synthetic biomedical case study.
 
-This paper is organized as follows. Section~\ref{sec:background} reviews the background on multi-state and joint modeling frameworks. Section~\ref{sec:model} introduces the proposed general multi-state joint modeling framework, detailing the likelihood formulation and proposed model selection creteria. Section~\ref{sec:inference} describes the stochastic-gradient–based inference algorithm, while Section~\ref{sec:prediction} presents the dynamic prediction framework. Section~\ref{sec:experiments} reports simulation experiments that assess parameter recovery and convergence properties of the proposed model, whereas Section~\ref{sec:paquid} applies the framework to data from the PAQUID cohort. Finally, Section~\ref{sec:conclusion} concludes with perspectives and future research directions.
+This paper is organized as follows. Section~\ref{sec:background} reviews the background on multi-state and joint modeling frameworks. Section~\ref{sec:model} introduces the proposed general multi-state joint modeling framework, detailing the likelihood formulation and proposed model selection criteria. Section~\ref{sec:inference} describes the stochastic-gradient–based inference algorithm, while Section~\ref{sec:prediction} presents the dynamic prediction framework. Section~\ref{sec:experiments} reports simulation experiments that assess parameter recovery and convergence properties of the proposed model, whereas Section~\ref{sec:paquid} applies the framework to data from the PAQUID cohort. Finally, Section~\ref{sec:conclusion} concludes with perspectives and future research directions.
 
 \section{Background} \label{sec:background}
 
@@ -81,9 +81,9 @@ However, the Markov assumption can be unrealistic in many real-world application
 \emph{Multi-state semi-Markov processes} (MSMPs) offer a natural generalization by allowing the distribution of sojourn times to be arbitrary.
 
 In an MSMP, the process is defined by a directed graph $G = (V, E)$,
-where $V$ represents the set of states and $E$ the set of possible transitions. The transition intensities $\lambda_{k' \mid k}(t \mid t_0)$ from state $k$ to state $k'$ at time $t$, given entry time $t_0$ are therefore assumed to be non-identically zero. The sojourn time in state $k$ is not restricted to an exponential distribution, allowing for more realistic modeling of the time spent in each state.
+where $V$ represents the set of states and $E$ the set of possible transitions. The transition intensities $\lambda_{k' \mid k}(t \mid t_0)$ from state $k$ to state $k'$ at time $t$, given entry time $t_0$, are therefore assumed to be non identically zero. The sojourn time in state $k$ is not restricted to an exponential distribution, allowing for more realistic modeling of the time spent in each state.
 
-MSMPs have been widely applied in a range of disciplines. In reliability, they are used to modeling degradation and repair processes \citep{limnios2001semi}. In biomedical studies, they have proven useful for analyzing illness-death models or disease progression with non-exponential transitions \citep{commenges2006likelihood, fiocco2008modelling}. Applications in finance also exist, where semi-Markovian dynamics can model credit rating migrations or economic regimes \citep{luciano2006semi}. In these contexts, MSMPs retain the Markov property in the embedded jump chain while offering increased realism through flexible dwell time modeling.
+MSMPs have been widely applied in a range of disciplines. In reliability, they are used to model degradation and repair processes \citep{limnios2001semi}. In biomedical studies, they have proven useful for analyzing illness-death models or disease progression with non-exponential transitions \citep{commenges2006likelihood, fiocco2008modelling}. Applications in finance also exist, where semi-Markovian dynamics can model credit rating migrations or economic regimes \citep{luciano2006semi}. In these contexts, MSMPs retain the Markov property in the embedded jump chain while offering increased realism through flexible dwell time modeling.
 
 From a methodological standpoint, MSMPs extend estimation strategies developed for Markov models, such as maximum likelihood or Bayesian inference, and can accommodate interval-censored or misclassified data \citep{frydman2005estimation}. This makes them a powerful and general tool for multi-state event history analysis.
 
@@ -103,19 +103,21 @@ In contrast, many real-world processes—such as recurrent disease relapse or re
 
 To address the limitations imposed by traditional joint modeling frameworks, we extend them to incorporate a multi-state process, thereby enabling a unified analysis of longitudinal biomarkers and discrete transitions between multiple health states.
 
-The proposed model defines a joint process $\{Y_i(t), S_i(t)\}_{t \geq 0}$, where $Y_i(t)$ denotes the longitudinal biomarker trajectory and $S_i(t)$ the multi-state event process. Both components are linked through shared latent structures, and the event process is represented on an arbitrary directed graph supporting both Markovian and semi-Markovian transition mechanisms.
+The proposed model defines a joint process $\{Y_i(t), S_i(t)\}_t$, where $Y_i(t)$ denotes the longitudinal biomarker trajectory and $S_i(t)$ the multi-state event process. Both components are linked through shared latent structures, and the event process is represented on an arbitrary directed graph supporting both Markovian and semi-Markovian transition mechanisms.
 
 \subsection{Notation Conventions}
 
-Throughout this section, $i \in \{ 1, \dots, n \}$ indexes $n \geq 1$ individuals, and $t_{ij}$ denotes the $j$-th observation time of individual $i$. The vector $Y_{ij} \in \mathbb{R}^d$ represents longitudinal biomarker measurements, and $X_i \in \mathbb{R}^p$ the associated covariates.
+Throughout this section, let $i \in \{1, \dots, n\}$ index $n \geq 1$ individuals, and let $t_{ij}$ denote the $j$-th observation time of individual $i$. The vector $Y_{ij} \in \mathbb{R}^d$ represents longitudinal biomarker measurements, and $X_i \in \mathbb{R}^p$ the associated covariates.  
 
-The latent random effects $b_i \sim \mathcal{N}(0,Q)$ capture individual heterogeneity, while $\psi_i \coloneqq f(\gamma, X_i, b_i)$ denotes the subject-specific parameters. The filtration $\mathcal{H}_i(t)$ represents the observed history of the longitudinal process up to time $t$.
+The latent random effects $b_i \sim \mathcal{N}(0, Q)$ capture individual heterogeneity, and the subject-specific parameters are defined as $\psi_i \coloneqq f(\gamma, X_i, b_i)$. The set $\mathcal{H}_i(t) \coloneqq \{ (w, h(w, \psi_i)) : w \leq t \}$ represents the true underlying history of the longitudinal process up to time $t$. Correspondingly, $\mathcal{Y}_i(t)$ denotes the observed longitudinal history, and $\mathcal{S}_i(t)$ denotes the observed trajectory of the semi-Markovian dynamics.  
 
-Transition times and states are denoted by $(T_{i\ell}, S_{i\ell})$, with right-censoring time $C_i$. We also define the index of the last observed transition before time $t$ denoted by $m_i(t) \coloneqq \sup \{\ell \geq 0 : T_{i\ell} \leq t\}$.
+Transition times and states are denoted by $(T_{i\ell}, S_{i\ell}) \in \mathbb{R} \times E$, where $E$ is the space of admissible states, and are subject to right-censoring at time $C_i$. We define the index of the last observed transition before time $t$ as $m_i(t) \coloneqq \sup \{ \ell \geq 0 : T_{i\ell} \leq t \}$. The complete sequence of transition times and states for individual $i$ is denoted by $\mathcal{T}_i^*$, whereas $\mathcal{T}_i$ denotes the corresponding right-censored sequence.
 
 \subsection{Extending Multi-State Joint Models} \label{sec:model}
 
-The joint model proposed by Ferrer et al. \citep{ferrer2016joint} established a foundational link between longitudinal biomarkers and multi-state processes through shared random effects. However, their formalism relies on binary censoring indicators to characterize transitions, thereby inherently restricting the modeling framework to Directed Acyclic Graphs (DAGs) and excluding recurrent events. To overcome this limitation, we present a new method based on arbitrary graph transitions. By shifting away from binary indicators toward a more flexible graph-theoretic specification, our approach accommodates complex disease trajectories, including recurrent events and cyclic transitions that cannot be captured within a DAG-based structure.
+The joint model proposed by Ferrer et al. \citep{ferrer2016joint} established a foundational link between longitudinal biomarkers and multi-state processes through shared random effects. However, their formalism relies on binary censoring indicators to characterize transitions, thereby inherently restricting the modeling framework to Directed Acyclic Graphs (DAGs) and excluding recurrent events. Indeed, the proposed model uses, for each state $k \in E$, a tuple $(T_k, \delta_k)$, where $T_k$ denotes the observed or censored time until leaving state $k$ and $\delta_k$ is an indicator equal to $1$ if the transition was observed and $0$ if the observation was censored (\textit{i.e.}, the transition was not observed). While this representation may be adequate for traditional joint models, it implicitly assumes that each state can be exited at most once and thus precludes cycles or repeated visits, making it unsuitable for a generalization to more complex multi-state processes.
+
+To overcome this limitation, we present a new method based on arbitrary graph transitions. By shifting away from binary indicators toward a more flexible graph-theoretic specification, our approach accommodates complex disease trajectories, including recurrent events and cyclic transitions that cannot be captured within a DAG-based structure.
 
 \subsubsection{Graph Structure}
 
@@ -166,9 +168,10 @@ Each individual $i \in \{ 1, \dots, n \}$ follows a latent trajectory
     \mathcal{T}_i^* \coloneqq \big((T_{i0}, S_{i0}), (T_{i1}, S_{i1}), (T_{i2}, S_{i2}), \dots\big),
 \]
 where $T_{i\ell}$ denotes the $\ell$-th transition time and
-$S_{i\ell} \in V$ the corresponding state. The observed trajectory is right-censored at time $C_i$, so that only $\{(T_{i\ell}, S_{i\ell}) : T_{i\ell} \leq C_i\}$ is observed. Between transitions, the state $S_i(t)$ is constant. Letting $m_i(t) \coloneq \sup \{ \ell \geq 0 : T_{i\ell} \leq t \}$ be the index of the last observed transition before time $t$ and $m_i \coloneqq m_i(C_i)$, we thus assume that no further transitions occur for individual $i$ on the interval $(T_{im_i}, C_i]$.
+$S_{i\ell} \in V$ the corresponding state. The observed trajectory is right-censored at time $C_i$, so that only $\mathcal{T}_i \coloneqq \{(T_{i\ell}, S_{i\ell}) : T_{i\ell} \leq C_i\}$ is observed. Between transitions, the state $S_i(t)$ is constant. Letting $m_i(t) \coloneqq \sup \{ \ell \geq 0 : T_{i\ell} \leq t \}$ be the index of the last observed transition before time $t$ and $m_i \coloneqq m_i(C_i)$, we thus assume that no further transitions occur for individual $i$ on the interval $(T_{im_i}, C_i]$. We also define $\mathcal{S}_i(t) \coloneqq \{ (w, S_i(w)) : w \leq t \}$ as the observed trajectory up to time $t$, which is equivalent to specifying all transition times and their corresponding states up to $t$, together with the time $t$ itself.
 
-We emphasize that modeling the observed data solely as censored collections of transition times, as in Ferrer et al.~\citep{ferrer2016joint}, is not sufficient to represent such trajectories, since it implicitly restricts each state to be visited at most once and therefore rules out recurrent transitions.
+
+We emphasize once more that modeling the observed data solely as censored collections of transition times, as in Ferrer et al.~\citep{ferrer2016joint}, is not sufficient to represent such trajectories, since it implicitly restricts each state to be visited at most once and therefore rules out recurrent transitions.
 
 The process is assumed to satisfy a (possibly time-inhomogeneous) semi-Markov property
 \begin{equation} \label{ass:markov-property}
@@ -202,13 +205,12 @@ Conditional transition probabilities are
 
 \subsection{Multi-State Joint Model Specification}
 
-The proposed multi-state joint model with Gaussian prior and
-homoscedastic Gaussian noise is specified by:
+Omitting the implicit conditioning on the individual parameters and covariates for the sake of simple notation, the proposed multi-state joint model with a Gaussian prior and homoscedastic Gaussian noise is specified by
 \[
 \begin{cases}
     Y_{ij} = h(t_{ij}, \psi_i) + \epsilon_{ij}, \quad \epsilon_{ij} \sim \mathcal{N}(0, R), \\
-    \psi_i = f(\gamma, X_i, b_i), \quad b_i \sim \mathcal{N}(0, Q), \\
-    \lambda_i^{k' \mid k}\left( t \mid X_i, T_{im_i(t)}, \mathcal{H}_i(t) \right) = \lambda_0^{k' \mid k}(t \mid T_{im_i(t)}) \exp\big(\alpha^{k' \mid k} g^{k' \mid k}(t, X_i, \psi_i) + \beta^{k' \mid k} X_i\big).
+    \lambda_i^{k' \mid k}\left( t \mid \mathcal{H}_i(t), \mathcal{S}_i(t) \right) = \lambda_0^{k' \mid k}(t \mid T_{im_i(t)}) \exp\big(\alpha^{k' \mid k} g^{k' \mid k}(t, X_i, \psi_i) + \beta^{k' \mid k} X_i\big), \\
+    \psi_i = f(\gamma, X_i, b_i), \quad b_i \sim \mathcal{N}(0, Q).
 \end{cases}
 \]
 
@@ -219,7 +221,7 @@ The coefficient $\alpha^{k' \mid k}$ quantifies the effect of the longitudinal b
 
 \subsubsection{Model Variants}
 
-Two baseline hazard conventions are common:
+Two baseline hazard conventions are common and can be specified as
 \[
     \lambda_0^{k' \mid k}(t \mid T_{im_i(t)}) =
     \begin{cases}
@@ -257,7 +259,7 @@ To derive the marginal likelihood, we decompose the joint distribution of the lo
     \end{enumerate}
 \end{tcolorbox}
 
-These grouped assumptions mirror those used in classical joint modeling \citep{rizopoulos2012joint} and multi-state survival analysis \citep{putter2007competing}: independence across subjects; the conditional independence structure linking the longitudinal and event submodels through shared random effects;  noninformative censoring and (semi-)Markovian dynamics.
+These grouped assumptions mirror those used in classical joint modeling \citep{rizopoulos2012joint} and multi-state survival analysis \citep{putter2007competing}: independence across subjects, the conditional independence structure linking the longitudinal and event submodels through shared random effects, noninformative censoring, and semi-Markovian dynamics.
 
 \bigbreak
 
@@ -266,7 +268,7 @@ Let $\theta \coloneqq (\gamma, Q, R, \alpha, \beta)$ denote the vector of model 
     p(Y_i, \mathcal{T}_i \mid X_i, C_i, \theta) = \int p(Y_i \mid b_i, X_i, \theta) \, p(\mathcal{T}_i \mid b_i, X_i, C_i, \theta) \, p(b_i \mid \theta) \, db_i.
 \]
 
-This formulation generalizes the joint likelihoods of \citet{wulfsohn1997joint} and \citet{ferrer2016joint} to arbitrary multi-state event structures. Each part can then be explicitely expressed using Assumptions~\ref{ass:likelihood}, yielding an expression very similar to that obtained by \citet{rizopoulos2012joint}.
+This formulation generalizes the joint likelihoods of \citet{wulfsohn1997joint} and \citet{ferrer2016joint} to arbitrary multi-state event structures. Each part can then be explicitly expressed using Assumptions~\ref{ass:likelihood}, yielding an expression very similar to that obtained by \citet{rizopoulos2012joint}.
 
 \begin{description}
     \item[\textnormal{\textbf{Prior likelihood:}}]
@@ -306,7 +308,7 @@ Moreover, here, we assume that the initial state $S_{i0}$ is observed. However, 
 
 \subsection{Model Selection and Information Criteria}
 
-To compare competing model specifications, we rely on information criteria based on the marginal likelihood as defined in Section~\ref{sec:inference}. The Akaike Information Criterion (AIC) \citep{akaike2003new} and the Bayesian Information Criterion (BIC) \citep{schwarz1978estimating} are standard tools. While the AIC relies on an asymptotically unbiased estimator of the $\log$-likelihood, the BIC aims to identify the true model with great probability as the sample size grows.
+To compare competing model specifications, we rely on information criteria based on the marginal likelihood as defined in Section~\ref{sec:inference}. The Akaike Information Criterion (AIC) \citep{akaike2003new} and the Bayesian Information Criterion (BIC) \citep{schwarz1978estimating} are standard tools. While the AIC relies on an asymptotically unbiased estimator of the $\log$-likelihood, the BIC aims to identify the true model with high probability as the sample size grows.
 
 The Akaike Information Criterion is computed as follows
 \[
@@ -314,7 +316,7 @@ The Akaike Information Criterion is computed as follows
 \]
 where $k$ is the number of parameters, and $\hat{\theta}$ is a maximizer of the marginal likelihood.
 
-The Bayesian Information Criterion is similarly defined but imposes a stronger penalty for model complexity, growing in $\log n$ where $n$ is the number of observations. Particularly in the context of mixed effects models, and even more so for multi-state joint models, the number of observations $n$ may vary from one definition to another, either the total number of repeated measurements or the number of individuals \citep{delattre2014note}. To alleviate this problem, we recall the derivation of the BIC from the Laplace approximation \citep{lebarbier2006introduction}. For a prior distribution $\pi$ on a set of models $\mathcal{M}$, the Laplace approximation approaches up to constant terms which could also be accounted to improve the approximation, the posterior probability given observed data $x$ defined in Section~\ref{sec:inference} by
+The Bayesian Information Criterion is similarly defined but imposes a stronger penalty for model complexity, growing in $\log n$ where $n$ is the number of observations. Particularly in the context of mixed effects models, and even more so for multi-state joint models, the number of observations $n$ may vary from one definition to another, either the total number of repeated measurements or the number of individuals \citep{delattre2014note}. To alleviate this problem, we recall the derivation of the BIC from the Laplace approximation \citep{lebarbier2006introduction}. For a prior distribution $\pi$ on a set of models $\mathcal{M}$, the Laplace approximation yields, up to constant terms (which could also be included to improve the approximation), the approximation of the posterior probability given observed data $x$ defined in Section~\ref{sec:inference} reads
 \[
     \forall m \in \mathcal{M}, \, \log p(x \mid m) \approx \log \mathcal{L}_\text{marginal}(\hat{\theta}; x) - \frac{1}{2} \log \det(-H_{\hat{\theta}}),
 \]
@@ -326,14 +328,14 @@ where $\mathcal{I}(\hat{\theta})$ denotes the Fisher Information Matrix \citep{c
 \[
     \forall m \in \mathcal{M}, \, \log p(x \mid m) \approx \log \mathcal{L}_\text{marginal}(\hat{\theta}; x) - \frac{1}{2} \log \det \hat{\mathcal{I}}_n(\hat{\theta}),
 \]
-where $\hat{\mathcal{I}}_n(\hat{\theta}) = n \, \hat{\mathcal{I}}(\hat{\theta})$, which in practice corresponds to the matrix readily computed by our software. 
+where $\hat{\mathcal{I}}_n(\hat{\theta}) \coloneqq n \, \hat{\mathcal{I}}(\hat{\theta})$, which in practice corresponds to the matrix readily computed by our software. 
 
 Thus, our BIC criterion can be written as
 \[
 \mathrm{BIC}_\mathcal{I} \coloneqq -2 \log \mathcal{L}_\text{marginal}(\hat{\theta}; x) + \log \det \hat{\mathcal{I}}_n(\hat{\theta}).
 \]
 
-In both cases, one should aim at minimizing the chosen criterion.
+In both cases, one should aim to minimize the chosen criterion.
 
 \section{Statistical Inference} \label{sec:inference}
 
@@ -346,7 +348,7 @@ where
     \mathcal{L}_\text{complete}(\theta  ; X, Y, \mathcal{T}, C, b) = \prod_{i=1}^n p(Y_i \mid b_i, X_i, \theta) \, p(\mathcal{T}_i \mid b_i, X_i, C_i, \theta) \, p(b_i \mid \theta).
 \]
 
-It is to be noted that this integral is typically intractable in closed form due to the nonlinear nature of the model. Several optimization methods adapted from the nonlinear mixed-effects literature can be applied, including Stochastic EM \citep{kuhn2004coupling}, Laplace approximation \citep{wolfinger1993laplace} and Gauss--Hermite quadrature, alongside with MCMC-based approximations such as Metropolis--Hastings \citep{hastings1970monte} and Hamiltonian Monte Carlo \citep{neal2011mcmc}. These strategies are implemented in software such as \texttt{JMBayes} \citep{jmbayes22024,rizopoulos2020package}.
+It is to be noted that this integral is typically intractable in closed form due to the nonlinear nature of the model. Several optimization methods adapted from the nonlinear mixed-effects literature can be applied, including Stochastic EM \citep{kuhn2004coupling}, Laplace approximation \citep{wolfinger1993laplace} and Gauss--Hermite quadrature, alongside MCMC-based approximations such as Metropolis--Hastings \citep{hastings1970monte} and Hamiltonian Monte Carlo \citep{neal2011mcmc}. These strategies are implemented in software such as \texttt{JMBayes} \citep{jmbayes22024,rizopoulos2020package}.
 
 Another approach requiring mild regularity assumptions on the $\log$ marginal likelihood, but without the need for the model to belong in the exponential family, is to consider a stochastic gradient ascent scheme \citep{caillebotte2025estimation, baey2023efficient} using Fisher's identity and following the Robbins-Monro procedure \citep{robbins1951stochastic}.
 
@@ -356,7 +358,7 @@ Under interchangeability of integral and differentiation, setting $x \coloneqq (
 \]
 
 This expectation is approximated using Monte Carlo samples from the posterior $p(\cdot \mid x, \theta)$, avoiding the need to evaluate the intractable marginal likelihood
-$\mathcal{L}_\text{marginal}(\theta; x)$. This formulation naturally supports stochastic gradient ascent with MCMC-based posterior sampling and is amenable to minibatch parallelization across individuals, ensuring the convergence to a critical point. The update rule is as follows:
+$\mathcal{L}_\text{marginal}(\theta; x)$. This formulation naturally supports stochastic gradient ascent with MCMC-based posterior sampling and is amenable to minibatch parallelization across individuals, ensuring the convergence to a critical point. The update rule is described in Algorithm~\ref{alg:sgd}.
 
 \begin{algorithm}[H]
     \caption{Stochastic gradient ascent model inference}
@@ -364,11 +366,13 @@ $\mathcal{L}_\text{marginal}(\theta; x)$. This formulation naturally supports st
 
     \begin{algorithmic}[1]
         \algrenewcommand\algorithmicrequire{\textbf{Input:}}
-        \Require data $x$; initial parameter $\theta^{(0)}$; step sizes $(\eta_t)_{t \geq 0}$ with $\sum_t \eta_t = +\infty$, $\sum_t \eta_t^2 < +\infty$; batch size $K$; sampler $p_t^{\mathrm{MCMC}}$; stopping criterion.
+        \Require data $x$; initial parameter $\theta^{(0)}$; step sizes $(\eta_t)_{t \geq 0}$ with $\sum_t \eta_t = +\infty$, $\sum_t \eta_t^2 < +\infty$; batch size $K$; sampler $p^{\mathrm{MCMC}}$; stopping criterion.
         \Statex
+        \State $t \gets 0$
         \While{not converged}
-        \State Draw $b_k \sim p(\cdot \mid x, \theta_n) \approx p_n^\text{MCMC}$.
+        \State Draw $b_k \sim p(\cdot \mid x, \theta^{(t)}) \approx p^\text{MCMC}$.
         \State $\theta^{(t+1)} \gets \theta^{(t)} + \frac{\eta_t}{K} \sum_{k=1}^K \nabla_\theta \log \mathcal{L}_\text{complete} (\theta^{(t)} ; x, b_k)$.
+        \State $t \gets t + 1$
         \EndWhile
         \State \Return $\hat{\theta}$
     \end{algorithmic}
@@ -378,7 +382,7 @@ Preconditioning matrices may also be used, such as the Fisher Information Matrix
 
 \section{Dynamic prediction} \label{sec:prediction}
 
-The simulation of individual trajectories using Algorithm~\ref{alg:trajcetory-sim} enables prediction in the multi-state joint modeling framework. Specifically, predictions are derived from simulated event trajectories, allowing for individualized risk assessment and forecasting of future states or event times based on a subject's observed biomarker and event history. This approach generalizes classical dynamic prediction by leveraging the rich structure of multi-state processes and the joint distribution of longitudinal and event data.
+The simulation of individual trajectories using Algorithm~\ref{alg:trajectory-sim} enables prediction in the multi-state joint modeling framework. Specifically, predictions are derived from simulated event trajectories, allowing for individualized risk assessment and forecasting of future states or event times based on a subject's observed biomarker and event history. This approach generalizes classical dynamic prediction by leveraging the rich structure of multi-state processes and the joint distribution of longitudinal and event data.
 
 Let $i$ index a new individual. Suppose we are interested in some functional of the true (unobserved) future trajectory,
 \[
@@ -386,17 +390,25 @@ Let $i$ index a new individual. Suppose we are interested in some functional of 
 \]
 where $\mathbb{Y}$ is some generic space.
 
-For example, one can think of the state taken by the individual $i$ at a time $u$. As is the case in traditional dynamic prediction however, we are only interested in predicting quantities or characteristics that depend on a yet unobserved \emph{future}, given prior information, \textit{i.e.} the trajectory up to some prediction time $t \leq u$ and observed longitudinal markers. Contrary to (single transition) joint models, the conditional probability distribution on $(\mathbb{R} \times \mathcal{S})^\mathbb{N}$ cannot be analytically derived.
+For example, one can think of the state taken by the individual $i$ at a time $u$. As is the case in traditional dynamic prediction however, we are only interested in predicting quantities or characteristics that depend on a yet unobserved \emph{future}, given prior information, \textit{i.e.} the trajectory $\mathcal{S}_i(t)$ up to some prediction time $t \leq u$ and observed longitudinal markers $\mathcal{Y}_i(t) \coloneq \{ (t_{ij}, Y_{ij}) : t_{ij} \leq t \}$. Contrary to (single transition) joint models, the conditional probability distribution on $(\mathbb{R} \times \mathcal{S})^\mathbb{N}$ cannot be analytically derived.
 
-Nonetheless, as seen in Algorithm~\ref{alg:trajcetory-sim}, we are able to accurately simulate each trajectory. Therefore, a Monte Carlo estimation scheme may be devised under certain restrictions, where we estimate $\chi^*(\mathcal{T}_i^*)$ by its expected value:
+Nonetheless, as seen in Algorithm~\ref{alg:trajectory-sim}, we are able to accurately simulate each trajectory. Therefore, a single or double Monte Carlo estimation scheme may be devised under certain restrictions, where we estimate $\chi^*(\mathcal{T}_i^*)$ by its conditional expected value
 \[
-    \hat{\chi}_i =\coloneqq \mathbb{E}_{\mathcal{T}'_i \sim \mathscr{L}(\mathcal{T}_i^* \mid \mathcal{Y}(t), \mathcal{T}_i, t)}\left(\chi^*(\mathcal{T}'_i)\right) \approx \frac{1}{B} \sum_{k=1}^B \chi^*(\mathcal{T}_i^{(k)}), \, \mathcal{T}_i^{(k)} \overset{\text{i.i.d.}}{\sim} \mathscr{L}(\mathcal{T}_i^* \mid \mathcal{Y}(t), \mathcal{T}_i, t).
+    \hat{\chi}_i^{(1)} \coloneqq \mathbb{E}\left(\chi^*(\mathcal{T}'_i) \mid \mathcal{Y}_i(t), \mathcal{S}_i(t), \hat{\theta}\right) \approx \frac{1}{B} \sum_{k=1}^B \chi^*(\mathcal{T}_i^{(k)}), \, \mathcal{T}_i^{(k)} \overset{\text{i.i.d.}}{\sim} \mathscr{L}(\mathcal{T}_i^* \mid \mathcal{Y}(t), \mathcal{S}_i(t), \hat{\theta}).
 \]
 
-In general however, $\chi^*$ may very well depend on (countably) infinitely many transitions. As a result, since the proposed estiamtion relies on simulted samples, we require the quantity to depend only on a finite subset of transitions.
+Another approach from Bayesian perspective treats the model parameters $\theta$ as random variables by imposing a prior distribution together with the training data $\mathcal{D}_n$ \citep{rizopoulos2011dynamic}, and thus in this case our new estimator may be defined
+\[
+    \hat{\chi}_i^{(2)} \coloneqq \mathbb{E}_{\theta' \sim \mathscr{L}(\theta \mid \mathcal{D}_n)}\left(\mathbb{E}\left(\chi^*(\mathcal{T}'_i) \mid \mathcal{Y}(t), \mathcal{S}_i(t), \theta'\right)\right),
+\]
+and approximated by a double Monte Carlo accordingly.
+
+\bigbreak
+
+In general however, $\chi^*$ may very well depend on (countably) infinitely many transitions. As a result, since the proposed estimation relies on simulated samples, we require the quantity to depend only on a finite subset of transitions.
 
 \begin{assumption} \label{ass:simulatable}
-    There exists  $\chi: \bigcup_{n \geq 1} (\mathbb{R} \times V)^n \to \mathbb{Y}$ and $\tau_i$ a stopping time for the filtration $\mathcal{F}_{in} \coloneqq \sigma\left((T_{il}, S_{il})_{0 \leq \ell \leq n}\right)$ such that:
+    There exists  $\chi: \bigcup_{n \geq 1} (\mathbb{R} \times V)^n \to \mathbb{Y}$ and $\tau_i$ a stopping time for the filtration $\mathcal{F}_{in} \coloneqq \sigma\left((T_{il}, S_{il})_{0 \leq \ell \leq n}\right)$ such that
     \[
         \begin{cases}
             \tau_i < +\infty \text{ a.s.}, \\
@@ -405,12 +417,14 @@ In general however, $\chi^*$ may very well depend on (countably) infinitely many
     \]
 \end{assumption}
 
-Essentially, given Assumption~\ref{ass:simulatable}, with probability one we are guaranteed that the quantity of interested may be computed in a finite number of simulation steps. Indeed, the prediction algorithm for a single sample may be summarized as follows:
+Essentially, given Assumption~\ref{ass:simulatable}, with probability one we are guaranteed that the quantity of interest may be computed in a finite number of simulation steps. Indeed, the prediction algorithm for a single sample may be summarized as in Algorithm~\ref{alg:prediction}.
 
 \begin{algorithm}[H]
+    \caption{Prediction algorithm}
+    \label{alg:prediction}
     \begin{algorithmic}[1]
         \algrenewcommand\algorithmicrequire{\textbf{Input:}}
-        \Require $t \in \mathbb{R}$, a prediction time; $\mathcal{Y}(t)$ marker history; $\mathcal{T}_i$ trajectory up to time $t$; $\chi$ and stopping time $\tau_i$.
+        \Require $t \in \mathbb{R}$, a prediction time; $\mathcal{Y}(t)$ marker history; $\mathcal{T}_i$ trajectory up to time $t$; $\chi$ and stopping time $\tau_i$; $\hat{\theta}$ or $\mathscr{L}(\hat{\theta} \mid \mathcal{D}_n)$.
         \Statex
         \State $n \gets \mathrm{len}(\mathcal{T}_i)$
         \While{$n \leq \tau_i$}
@@ -428,13 +442,13 @@ Numerous quantities of interest may be encompassed by this framework. We give mu
 where $(v_0, v_1, \dots, v_k)$ ranges over all directed paths in $G$.
 
 \begin{example}[State at time $u$] \label{ex:state-at-time-u}
-    Let $G = (V, E)$ be a directed acyclic graph, $u \in \mathbb{R}$ be a fixed time, and $\mathbb{Y} = V$ be the set of possible states. Let $\tau_i = \inf \{ n \in \mathbb{N} : T_{in} \geq u \text{ or } S_{in} \text{ is absorbing} \}$. Clearly, $\tau_i \leq \operatorname{depth}(G) < +\infty$. Then, take $\chi_u^*(\mathcal{T}_i^*) = S_{i\tau_i}$, which corresponds to the state of the individual $i$ at time $u$. In particular, if $V = \{ 0, 1 \}$ and $E = \{ (0, 1) \}$, we recover the special case used for survival probability estimation in standard joint models \citep{rizopoulos2011dynamic}.
+    Let $G = (V, E)$ be a finite directed acyclic graph, $u \in \mathbb{R}$ be a fixed time, and $\mathbb{Y} = V$ be the set of possible states. Let $\tau_i = \inf \{ n \in \mathbb{N}: T_{in} \geq u \text{ or } S_{in} \text{ is absorbing} \}$. Clearly, $\tau_i \leq \operatorname{depth}(G) < +\infty$. Then, take $\chi_u^*(\mathcal{T}_i^*) = S_{i\tau_i}$, which corresponds to the state of the individual $i$ at time $u$. In particular, if $V = \{ 0, 1 \}$ and $E = \{ (0, 1) \}$, we recover the special case used for survival probability estimation in standard joint models \citep{rizopoulos2011dynamic}.
 \end{example}
 
 \bigbreak
 
 \begin{example}[Hitting time] \label{ex:hitting-time}
-    Let $G = (V, E)$ be a directed acyclic graph, $\mathbb{A} \subseteq V$ a non-empty subset of states, and $\mathbb{Y} = \mathbb{R} \cup \{ +\infty \}$. For any two non-empty sets $\mathbb{A}, \, \mathbb{B} \subseteq V$, we note $\mathbb{A} \rightsquigarrow \mathbb{B}$ if there exists a path from $\mathbb{A}$ to $\mathbb{B}$ in $G$. Let $\tau_i = \inf \{ n \in \mathbb{N} : S_{in} \in \mathbb{A} \vee  \{ S_{in} \} \not \rightsquigarrow \mathbb{A} \}$. Then, $\tau_i \leq \operatorname{depth}(G) < +\infty$ and take $\chi_{\mathbb{A}}^*(\mathcal{T}_i^*) = T_{i\tau_i} + \mathds{1}_{\{ S_{in} \} \not \rightsquigarrow \mathbb{A}} (+\infty)$ represents the hitting time for the set $\mathbb{A}$.
+    Let $G = (V, E)$ be a finite directed acyclic graph, $\mathbb{A} \subseteq V$ a non-empty subset of states, and $\mathbb{Y} = \mathbb{R} \cup \{ +\infty \}$. For any two non-empty sets $\mathbb{A}, \, \mathbb{B} \subseteq V$, we note $\mathbb{A} \rightsquigarrow \mathbb{B}$ if there exists a path from $\mathbb{A}$ to $\mathbb{B}$ in $G$. Let $\tau_i = \inf \{ n \in \mathbb{N} : S_{in} \in \mathbb{A} \vee  \{ S_{in} \} \not \rightsquigarrow \mathbb{A} \}$. Then, $\tau_i \leq \operatorname{depth}(G) < +\infty$ and take $\chi_{\mathbb{A}}^*(\mathcal{T}_i^*) = T_{i\tau_i} + \mathds{1}_{\{ S_{i\tau_i} \} \not \rightsquigarrow \mathbb{A}} (+\infty)$ represents the hitting time for the set $\mathbb{A}$.
 \end{example}
 
 \bigbreak
@@ -459,21 +473,7 @@ All simulations, estimations, and figures reported in this section were produced
 
 \subsection{Model Specification}
 
-The simulated model involves three states—Healthy ($0$), Sick ($1$), and Terminal ($2$)—connected by the transitions $0 \rightarrow 1$, $0 \rightarrow 2$, and $1 \rightarrow 2$ (Figure~\ref{fig:sim-graph}). This configuration captures the typical monotone evolution of a disease process, with both direct and indirect paths to the terminal state. Transition intensities follow an exponential baseline hazard under a clock-reset convention.
-
-The longitudinal process follows a continuous piecewise-affine regression:
-\[
-    h(t, \psi) = \psi_1 + \psi_2 t + \mathds{1}_{t > \tau} (\psi_3 - \psi_2)(t - \tau),
-\]
-with a known inflection time $\tau = 6$. The individual-specific parameters $\psi_i = (\psi_{i1}, \psi_{i2}, \psi_{i3})$ arise from a nonlinear mixed-effects model with Gaussian random effects $b_i \sim \mathcal{N}(0, Q)$ and independent Gaussian noise $\epsilon_{ij} \sim \mathcal{N}(0, R)$. The link function combines the current biomarker value and its slope,
-\[
-    g(t, X_i, \psi_i) = \big(h(t, \psi_i), \frac{\partial h}{\partial t}(t, \psi_i)\big),
-\]
-shared across transitions. Covariates $X_i$ are normally distributed and enter linearly through $\beta^{k' \mid k} X_i$.
-
-Longitudinal data were collected at up to $20$ random time points per subject and censored at $C_i \sim \mathcal{U}([10,15])$. Censoring also truncates the biomarker trajectories. The true parameter vector lies in $\mathbb{R}^{16}$. Each simulated dataset comprised $n=1000$ individuals, generating approximately balanced transition counts (Figure~\ref{fig:simulation}).
-
-This trajectory mimics a biomarker whose evolution slows after treatment or onset of symptoms, while preserving continuity at the change point.
+The simulated model involves three states—Healthy ($0$), Sick ($1$), and Terminal ($2$)—connected by the transitions $0 \rightarrow 1$, $0 \rightarrow 2$, and $1 \rightarrow 2$ (Figure~\ref{fig:sim-graph}). This configuration captures the typical monotone evolution of a disease process, with both direct and indirect paths to the terminal state. Transition intensities follow an exponential baseline hazard under a clock-reset convention at each state change. This trajectory mimics a biomarker whose evolution slows after treatment or onset of symptoms, while preserving continuity at the change point.
 
 
 \begin{figure}[H]
@@ -484,14 +484,25 @@ This trajectory mimics a biomarker whose evolution slows after treatment or onse
     \label{fig:sim-graph}
 \end{figure}
 
+The longitudinal process follows a continuous piecewise-affine regression
+\[
+    h(t, \psi) = \psi_1 + \psi_2 t + \mathds{1}_{t > \tau} (\psi_3 - \psi_2)(t - \tau),
+\]
+with a known inflection time $\tau = 6$. The individual-specific parameters $\psi_i = (\psi_{i1}, \psi_{i2}, \psi_{i3})$ arise from a nonlinear mixed-effects model with Gaussian random effects $b_i \sim \mathcal{N}(0, Q)$ and independent Gaussian noise $\epsilon_{ij} \sim \mathcal{N}(0, R)$. The link function combines the current biomarker value and its slope
+\[
+    g(t, X_i, \psi_i) = \big(h(t, \psi_i), \frac{\partial h}{\partial t}(t, \psi_i)\big),
+\]
+and is applied consistently across all transitions. Covariates $X_i$ are normally distributed and enter linearly through $\beta^{k' \mid k} X_i$.
+
+Longitudinal data were collected at up to $20$ random time points per subject and censored at $C_i \sim \mathcal{U}([10,15])$. Censoring also truncates the biomarker trajectories. 
+
+The parameter vector lies in $\mathbb{R}^{16}$. Each simulated dataset comprised $n=1000$ individuals, generating roughly balanced transition counts (Figure~\ref{fig:simulation}).
+
 \subsection{Estimator Convergence and Accuracy}
 
 Parameter estimation was performed using the stochastic-gradient inference procedure of Section~\ref{sec:inference}, with the Adam optimizer (learning rate $0.5$, batch size $K=100$) and an adaptive stopping criterion based on the first and second moments of parameter differences. Convergence was typically achieved in $400$--$500$ iterations and required around $12$ seconds per run on an AMD Ryzen~5 processor.
 
 Across $n_\text{runs} = 100$ independent replications, the mean relative bias of all parameters remained below $2\%$, and the root-mean-square error (RMSE) scaled approximately as $n^{-1/2}$. Parameters governing the biomarker trajectory $(\gamma, Q, R)$ were consistently well identified, while association coefficients $(\alpha^{k' \mid k}, \beta^{k' \mid k})$ exhibited slightly higher variability for rare transitions. Representative convergence trajectories are shown in Figure~\ref{fig:fitting-plots}, and quantitative results are summarized in Table~\ref{tbl:convergence-rmse}.
-
-Furthermore, longitudinal measurements were taken at $m_i \leq 20$ time points, and censoring times were drawn from
-$C_i \sim \mathcal{U}\left([10, 15]\right)$. Longitudinal observations were also truncated at the censoring times.
 
 A short summary of the longitudinal process as well as the trajectories
 is given by the Figure~\ref{fig:simulation} below.
@@ -525,7 +536,7 @@ To illustrate the convergence of the estimator, we examine the optimization proc
 
 To fit the model, we first have to define initial parameters, which can be particularly important for the optimization process if the model is not well-behaved. In the present case, without prior knowledge of the true parameters, we zero the values and use the identity matrix for both covariance matrices.
 
-Formally:
+Formally, for any $t \geq 1$ and $i \in \{ 1, 2 \}$, consider
 \[
     m_i^{(t)} \gets \beta_i m_i^{(t-1)} + (1 - \beta_i) (\theta^{(t)} - \theta^{(t-1)})^i, \quad \hat{m}_i^{(t)} = \frac{m_i^{(t)}}{1 - \beta_i^t},
 \]
@@ -628,7 +639,7 @@ functions were taken to be scaled and shifted hyperbolic tangent and its derivat
     \end{cases}
 \]
 
-At last, an individual covariates correspond to a pair of binary variables indicating wheter or not the individual has a diploma and is a male $\left(\mathds{1}_\text{CEP}(i), \mathds{1}_\text{male}(i)\right) \in \{0, 1\}^2$.
+At last, individual covariates correspond to a pair of binary variables indicating whether or not the individual has a diploma and is a male $\left(\mathds{1}_\text{CEP}(i), \mathds{1}_\text{male}(i)\right) \in \{0, 1\}^2$.
 
 \subsection{Results}
 
@@ -659,13 +670,13 @@ Before displaying the fitted parameters, the Fisher Information Matrix was compu
     \label{tbl:paquid-fit}
 \end{figure}
 
-Notably, the estimated standard errors are consistent with the number of observations per transition, with larger standard errors for transitions with fewer observations. Therefore, parameters with too few observations should be interpreted with caution, if at all. The linear covariate parameters also exhibit large standard errors, which indicates the coefficients are not significative in this setting.
+Notably, the estimated standard errors are consistent with the number of observations per transition, with larger standard errors for transitions with fewer observations. Therefore, parameters with too few observations should be interpreted with caution, if at all. The linear covariate parameters also exhibit large standard errors, which indicates the coefficients are not statistically significant in this setting.
 
-The association parameters $\alpha$ being negative, we can infer that cognitive decline (\textit{i.e.} rate of change) is associated with an increase in physical dependency.
+The negative values of the association parameters $\alpha$ suggest that greater cognitive decline is associated with a higher rate of progression in physical dependency.
 
 \subsubsection{Dynamic Prediction}
 
-Using the $n_\text{test} = 100$ individuals not included in the model fitting, we performed dynamic prediction. For each individual, longitudinal measurements and trajectories were truncated at various times $t$, and predictions were made for future time points $u \geq t$ beyond the truncation. Accuracy was then assessed by comparing the most likely predicted state with the true state at each corresponding future time point $u$, as illustrated in Figure~\ref{fig:paquid-acc}.
+Using the $n_\text{test} = 100$ individuals not included in the model fitting, we performed dynamic prediction through a single Monte Carlo integration scheme as defined in Section~\ref{sec:prediction}. For each individual, longitudinal measurements and trajectories were truncated at various times $t$, and predictions were made for future time points $u \geq t$ beyond the truncation. Accuracy was then assessed by comparing the most likely predicted state with the true state at each corresponding future time point $u$, as illustrated in Figure~\ref{fig:paquid-acc}.
 
 Formally, the prediction function $\chi_u^*$ is defined by Example
 \ref{ex:state-at-time-u}, and the accuracy measure at time $t$ for predicted states $(s_i)_i$ is defined as
@@ -673,7 +684,7 @@ Formally, the prediction function $\chi_u^*$ is defined by Example
     \text{accuracy}(u) = \frac{1}{n_\text{test}} \sum_{i=1}^{n_\text{test}} \mathds{1}_{\chi_{u \wedge C_i}(\mathcal{T}_i) = s_i}.
 \]
 
-Although $\mathcal{T}_i^*$ is unkown, the quantity $\chi_{u \wedge C_i}(\mathcal{T}_i)$ may be computed based on the censored trajectories. However, incorporating censoring times into prediction functions relies on information that is, in principle, not available at prediction time. Nevertheless, this inclusion is necessary to ensure fairness in accuracy metrics, since individuals who are not censored are generally more likely to have progressed to more advanced states of physical dependency than those who are censored.
+Although $\mathcal{T}_i^*$ is unknown, the quantity $\chi_{u \wedge C_i}(\mathcal{T}_i)$ may be computed based on the censored trajectories. However, incorporating censoring times into prediction functions relies on information that is, in principle, not available at prediction time. Nevertheless, this inclusion is necessary to ensure fairness in accuracy metrics, since individuals who are not censored are generally more likely to have progressed to more advanced states of physical dependency than those who are censored.
 
 \begin{minipage}{0.5\textwidth}
     \begin{figure}[H]
@@ -732,11 +743,11 @@ The data analyzed in this study are publicly available via the R package \texttt
 In nonlinear joint models with known design and known parameters
 parameters $\theta = (\gamma, Q, R, \alpha, \beta)$, the occurrence times of events conditionally on the latent variables $b_i$ and the covariates $X_i$ can be easily sampled using the inverse cumulative distribution function transform method. This may be achieved through bisection or other root-finding algorithms.
 
-The simulation of the transition process $\mathcal{T}_i^*$ conditionally on $b_i$, $X_i$, and $(T_{i0}, S_{i0})$ can be achieved drawing on the semi-Markov property  by considering one transition at a time, according to Algorithm~\ref{alg:trajcetory-sim}. The algorithme is similar to Gillespie's algorithm \citep{gillespie2007stochastic}, and can also include a survival condition $T_{i1} \geq t_i^\text{surv}$ that uses the Chasles relation.
+The simulation of the transition process $\mathcal{T}_i^*$ conditionally on $b_i$, $X_i$, and $(T_{i0}, S_{i0})$ can be achieved drawing on the semi-Markov property  by considering one transition at a time, according to Algorithm~\ref{alg:trajectory-sim}. The algorithme is similar to Gillespie's algorithm \citep{gillespie2007stochastic}, and can also include a survival condition $T_{i1} \geq t_i^\text{surv}$ that uses the Chasles relation.
 
 \begin{algorithm}[H]
     \caption{Simulation of trajectory $i$}
-    \label{alg:trajcetory-sim}
+    \label{alg:trajectory-sim}
 
     \begin{algorithmic}[1]
         \renewcommand{\algorithmicrequire}{\textbf{Input:}}
@@ -766,14 +777,14 @@ The simulation of the transition process $\mathcal{T}_i^*$ conditionally on $b_i
 The proof of the exactness of this algorithm is given below.
 
 \begin{proof}
-    First consider the case $t_i^\text{surv} = -\infty$. Let $t > T_{i\ell_i}$:
+    First consider the case $t_i^\text{surv} = -\infty$. Let $t > T_{i\ell_i}$. One has
     \begin{align*}
         \mathbb{P}(T_{i(\ell_i+1)} > t \mid T_{i\ell_i}, S_{i\ell_i}) &= \mathbb{P}(\bigcap_{s : \, (E_{i(\ell_i-1)}, s) \in E} T_{i(\ell_i+1)}^s > t \mid T_{i\ell_i}, S_{i\ell_i}), \\
         &= \prod_{s : \, (S_{i\ell_i}, s) \in E} \mathbb{P}(T_{i(\ell_i+1)}^s > t \mid T_{i\ell_i}, S_{i\ell_i}), \\
         &= \exp \Big(-\sum_{s : \, (S_{i\ell_i}, s) \in E} \Lambda_i^{s \mid S_{i(\ell_i-1)}}\big(t \mid b_i, X_i, T_{i\ell_i}, \theta)\Big).
     \end{align*}
     
-    Furthermore:
+    Furthermore
     \begin{align*}
         & \mathbb{P}(S_{i(\ell_i+1)} \mid T_{i(\ell_i+1)} = t, T_{i\ell_i}, S_{i\ell_i}) \\
          & \propto p(\{ T_{i(\ell_i+1)}^{S_{i(\ell_i+1)}} = t \} \cap \bigcap_{\substack{s : \, (S_{i\ell_i}, s) \in E, \\ s \neq S_{i(\ell_i+1)}}} \{ T_{i(\ell_i+1)}^s \geq t \} \mid T_{i\ell_i}, S_{i\ell_i}), \\
