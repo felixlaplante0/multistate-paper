@@ -202,6 +202,8 @@ Conditional transition probabilities are
     \mathbb{P}(S_{i,\ell+1} = k' \mid T_{i,\ell+1}, T_{i\ell}, S_{i\ell}) = \frac{\lambda_i^{k'|S_{i\ell}}(T_{i,\ell+1} \mid T_{i\ell})}{\sum_{s:(S_{i\ell},s)\in E}\lambda_i^{s|S_{i\ell}}(T_{i,\ell+1}\mid T_{i\ell})}.
 \]
 
+In practice, numerical integration can be efficiently carried out using quadrature methods such as the Gauss-Legendre quadrature \citep{lether1978construction}.
+
 \subsection{Multi-State Joint Model Specification}
 
 Omitting the implicit conditioning on the individual parameters and covariates for the sake of simple notation, the proposed multi-state joint model with a Gaussian prior and homoscedastic Gaussian noise is specified by
@@ -224,8 +226,8 @@ Two baseline hazard conventions are common and can be specified as
 \[
     \lambda_0^{k' \mid k}(t \mid T_{im_i(t)}) =
     \begin{cases}
-        \lambda_0^{k' \mid k}(t - T_{im_i(t)}) &\text{(clock reset)},   \\
-        \lambda_0^{k' \mid k}(t)  &\text{(clock forward)}.
+        \lambda_0^{k' \mid k}(t - T_{im_i(t)}) &\mathrm{(clock reset)},   \\
+        \lambda_0^{k' \mid k}(t)  &\mathrm{(clock forward)}.
     \end{cases}
 \]
 
@@ -279,7 +281,7 @@ This formulation generalizes the joint likelihoods of \citet{wulfsohn1997joint} 
     \item[\textnormal{\textbf{Longitudinal likelihood:}}]
         \begin{align*}
            &p(Y_i \mid b_i, X_i, \theta) = \prod_{j = 1}^{n_i} \frac{(2 \pi)^{-d/2}}{\det(R)^{1/2}} \exp\left( -\tfrac{1}{2} \left(Y_{ij} - h(t_{ij}, \psi_i) \right)^T R^{-1} \left( Y_{ij} - h(t_{ij}, \psi_i) \right) \right), \\
-           &\text{with } \psi_i = f(\gamma, X_i, b_i).
+           &\mathrm{with } \psi_i = f(\gamma, X_i, b_i).
         \end{align*}
 
     \item[\textnormal{\textbf{Semi-Markov likelihood:}}]
@@ -350,7 +352,7 @@ where $q$ denotes the dimension of the latent vector. This approximation replace
 
 \section{Statistical Inference} \label{sec:inference}
 
-The estimation of model parameters $\theta = (\gamma, Q, R, \alpha, \beta)$ relies on two likelihood formulations: the complete-data likelihood $\mathcal{L}_{\text{complete}}$, which includes latent variables, and the marginal likelihood $\mathcal{L}_\mathrm{marginal}$, obtained by integrating them out
+The estimation of model parameters $\theta = (\gamma, Q, R, \alpha, \beta)$ relies on two likelihood formulations: the complete-data likelihood $\mathcal{L}_{\mathrm{complete}}$, which includes latent variables, and the marginal likelihood $\mathcal{L}_\mathrm{marginal}$, obtained by integrating them out
 \[
     \mathcal{L}_\mathrm{marginal}(\theta ; X, Y, \mathcal{T}, C) = \int \mathcal{L}_\mathrm{complete}(\theta; X, Y, \mathcal{T}, C, b) \,db,
 \]
@@ -365,7 +367,7 @@ Another approach requiring mild regularity assumptions on the $\log$ marginal li
 
 Under interchangeability of integral and differentiation, setting $x \coloneqq (X, Y, \mathcal{T}, C)$ for convenience, the Fisher identity writes
 \[
-    \nabla_\theta \log \mathcal{L}_\mathrm{marginal}(\theta ; x) = \mathbb{E}_{b \sim p(\cdot \mid x, \theta)}\left[ \nabla_\theta \log \mathcal{L}_{\text{complete}}(\theta ; x, b) \right].
+    \nabla_\theta \log \mathcal{L}_\mathrm{marginal}(\theta ; x) = \mathbb{E}_{b \sim p(\cdot \mid x, \theta)}\left[ \nabla_\theta \log \mathcal{L}_{\mathrm{complete}}(\theta ; x, b) \right].
 \]
 
 This expectation is approximated using Monte Carlo samples from the posterior $p(\cdot \mid x, \theta)$, avoiding the need to evaluate the intractable marginal likelihood $\mathcal{L}_\mathrm{marginal}(\theta; x)$. To ensure the covariance matrices $Q$ and $R$ remain symmetric and positive-definite during optimization, we parametrize them using a $\log$-Cholesky decomposition of their inverse. By taking the logarithm of the diagonal elements of the Cholesky factors, we map the constrained covariance parameters to an unconstrained real-valued space, and avoid explicit matrix inversion for likelihood computation. This formulation naturally supports stochastic gradient ascent with MCMC-based posterior sampling and is amenable to minibatch parallelization across individuals, ensuring convergence to a critical point. The update rule is detailed in Algorithm~\ref{alg:sgd}.
@@ -380,7 +382,7 @@ This expectation is approximated using Monte Carlo samples from the posterior $p
         \Statex
         \State $t \gets 0$
         \While{not converged}
-        \State Draw $b_k \sim p(\cdot \mid x, \theta^{(t)}) \approx p^\text{MCMC}$.
+        \State Draw $b_k \sim p(\cdot \mid x, \theta^{(t)}) \approx p^\mathrm{MCMC}$.
         \State $\theta^{(t+1)} \gets \theta^{(t)} + \frac{\eta_t}{K} \sum_{k=1}^K \nabla_\theta \log \mathcal{L}_\mathrm{complete} (\theta^{(t)} ; x, b_k)$.
         \State $t \gets t + 1$
         \EndWhile
@@ -404,7 +406,7 @@ For example, one can think of the state taken by the individual $i$ at a time $u
 
 Nonetheless, as seen in Algorithm~\ref{alg:trajectory-sim}, we are able to accurately simulate each trajectory. Therefore, a single or double Monte Carlo estimation scheme may be devised under certain restrictions, where we estimate $\chi^*(\mathcal{T}_i^*)$ by its conditional expected value
 \[
-    \hat{\chi}_i^{(1)} \coloneqq \mathbb{E}\left[ \chi^*(\mathcal{T}'_i) \mid \mathcal{Y}_i(t), \mathcal{S}_i(t), \hat{\theta} \right] \approx \frac{1}{B} \sum_{k=1}^B \chi^*(\mathcal{T}_i^{(k)}), \, \mathcal{T}_i^{(k)} \overset{\text{i.i.d.}}{\sim} \mathscr{L}(\mathcal{T}_i^* \mid \mathcal{Y}(t), \mathcal{S}_i(t), \hat{\theta}),
+    \hat{\chi}_i^{(1)} \coloneqq \mathbb{E}\left[ \chi^*(\mathcal{T}'_i) \mid \mathcal{Y}_i(t), \mathcal{S}_i(t), \hat{\theta} \right] \approx \frac{1}{B} \sum_{k=1}^B \chi^*(\mathcal{T}_i^{(k)}), \, \mathcal{T}_i^{(k)} \overset{\mathrm{i.i.d.}}{\sim} \mathscr{L}(\mathcal{T}_i^* \mid \mathcal{Y}(t), \mathcal{S}_i(t), \hat{\theta}),
 \]
 where the samples $\{ \mathcal{T}_i^{(k)} \}_{1 \leq k \leq B}$ are generated using a Markov chain Monte Carlo algorithm targeting the distribution $\mathscr{L}(b_i \mid \mathcal{Y}_i(t), \mathcal{S}_i(t), \hat{\theta})$ in conjunction with Algorithm~\ref{alg:trajectory-sim}.
 
@@ -422,7 +424,7 @@ In general however, $\chi^*$ may very well depend on (countably) infinitely many
     There exists  $\chi: \bigcup_{n \geq 1} (\mathbb{R} \times V)^n \to \mathbb{Y}$ and $\tau_i$ a stopping time for the filtration $\mathcal{F}_{in} \coloneqq \sigma\left( (T_{il}, S_{il})_{0 \leq \ell \leq n} \right)$ such that
     \[
         \begin{cases}
-            \tau_i < +\infty \text{ a.s.}, \\
+            \tau_i < +\infty \mathrm{ a.s.}, \\
             \chi^*(\mathcal{T}_i^*) = \chi\left( (T_{il}, S_{il})_{0 \leq \ell \leq \tau_i} \right)
         \end{cases}
     \]
@@ -453,7 +455,7 @@ Numerous quantities of interest may be encompassed by this framework. We give mu
 where $(v_0, v_1, \dots, v_k)$ ranges over all directed paths in $G$.
 
 \begin{example}[State at time $u$] \label{ex:state-at-time-u}
-    Let $G = (V, E)$ be a finite directed acyclic graph, $u \in \mathbb{R}$ be a fixed time, and $\mathbb{Y} = \Delta(V)$ be the simplex of distributions over states. Let $\tau_i = \inf \{ n \in \mathbb{N}: T_{in} \geq u \text{ or } S_{in} \text{ is absorbing} \}$. Clearly, $\tau_i \leq \operatorname{depth}(G) < +\infty$. For each state $v \in V$, let $\mathds{1}_v \in \mathbb{Y}$ denote the vector that is $1$ at entry $v$ and $0$ elsewhere (a one-hot encoding of $v$). Then, we set $\chi_u^*(\mathcal{T}_i^*) = \mathds{1}_{S_{i\tau_i}} \in \mathbb{Y}$ representing the state occupied by individual $i$ at time $u$. In particular, if $V = \{ 0, 1 \}$ and $E = \{ (0, 1) \}$, we recover the special case used for survival probability estimation in standard joint models \citep{rizopoulos2011dynamic}.
+    Let $G = (V, E)$ be a finite directed acyclic graph, $u \in \mathbb{R}$ be a fixed time, and $\mathbb{Y} = \Delta(V)$ be the simplex of distributions over states. Let $\tau_i = \inf \{ n \in \mathbb{N}: T_{in} \geq u \mathrm{ or } S_{in} \mathrm{ is absorbing} \}$. Clearly, $\tau_i \leq \operatorname{depth}(G) < +\infty$. For each state $v \in V$, let $\mathds{1}_v \in \mathbb{Y}$ denote the vector that is $1$ at entry $v$ and $0$ elsewhere (a one-hot encoding of $v$). Then, we set $\chi_u^*(\mathcal{T}_i^*) = \mathds{1}_{S_{i\tau_i}} \in \mathbb{Y}$ representing the state occupied by individual $i$ at time $u$. In particular, if $V = \{ 0, 1 \}$ and $E = \{ (0, 1) \}$, we recover the special case used for survival probability estimation in standard joint models \citep{rizopoulos2011dynamic}.
 \end{example}
 
 \bigbreak
@@ -552,13 +554,13 @@ where the inequalities are required to hold component-wise.
 
 \bigbreak
 
-To illustrate the convergence of the estimator, we examine the optimization process for a particular run with $n = 1000$ in Figure~\ref{fig:fitting-plots}, as well as RMSE values computed from $n_\text{runs} = 100$ independent runs on different simulated datasets, all generated from the same underlying distribution, as shown in Table~\ref{tbl:convergence-rmse}.
+To illustrate the convergence of the estimator, we examine the optimization process for a particular run with $n = 1000$ in Figure~\ref{fig:fitting-plots}, as well as RMSE values computed from $n_\mathrm{runs} = 100$ independent runs on different simulated datasets, all generated from the same underlying distribution, as shown in Table~\ref{tbl:convergence-rmse}.
 
 \begin{figure}[H]
     \centering
     \begin{tabular}{lcccc}
         \hline
-        Parameter &True value &Mean &Standard error &RMSE \\
+        Parameter &True value &Mean &Std. deviation &RMSE \\
         \hline
         $\gamma_1$ &2.5000 &2.4960 &0.0370 &0.0372 \\
         $\gamma_2$ &-1.3000 &-1.3039 &0.0257 &0.0260 \\
@@ -686,14 +688,14 @@ The negative values of the association parameters $\alpha$ suggest that greater 
 
 \subsubsection{Dynamic Prediction}
 
-Using the $n_\text{test} = 100$ individuals not included in the model fitting, we performed dynamic prediction through a single Monte Carlo integration scheme as defined in Section~\ref{sec:prediction}. For each individual, longitudinal measurements and trajectories were truncated at various times $t_\mathrm{trunc}$, and predictions were made for future time points $u \geq t_\mathrm{trunc}$ beyond the truncation. For any new individual $i$ in the test set, we consider the quantity $\chi_{u \wedge C_i}^*(\mathcal{T}_i^*)$ as defined by Example~\ref{ex:state-at-time-u}. It is estimated using the information available up to the conditioning (or truncation) time $t_\text{trunc}$, \textit{i.e.}, $\left( \mathcal{Y}_i(t_\text{trunc}), \mathcal{S}_i(t_\text{trunc}) \right)$, according to the methodology of Section~\ref{sec:prediction}. Given an estimate $\hat{\chi}_{i, u \wedge C_i}$, the predicted state of the individual $i$ at time $u \wedge C_i$ is then defined as the most probable state
+Using the $n_\mathrm{test} = 100$ individuals not included in the model fitting, we performed dynamic prediction through a single Monte Carlo integration scheme as defined in Section~\ref{sec:prediction}. For each individual, longitudinal measurements and trajectories were truncated at various times $t_\mathrm{trunc}$, and predictions were made for future time points $u \geq t_\mathrm{trunc}$ beyond the truncation. For any new individual $i$ in the test set, we consider the quantity $\chi_{u \wedge C_i}^*(\mathcal{T}_i^*)$ as defined by Example~\ref{ex:state-at-time-u}. It is estimated using the information available up to the conditioning (or truncation) time $t_\mathrm{trunc}$, \textit{i.e.}, $\left( \mathcal{Y}_i(t_\mathrm{trunc}), \mathcal{S}_i(t_\mathrm{trunc}) \right)$, according to the methodology of Section~\ref{sec:prediction}. Given an estimate $\hat{\chi}_{i, u \wedge C_i}$, the predicted state of the individual $i$ at time $u \wedge C_i$ is then defined as the most probable state
 \[
 s_i(t_\mathrm{trunc}) \in \operatorname*{\arg \max}_{k \in \{ 0, 1, 2, 3 \}} \left( \hat{\chi}_{i, u \wedge C_i} \right)_k
 \]
 
 For each fixed truncation time $t_\mathrm{trunc}$, common to all test individuals, accuracy was then assessed by comparing the predicted states with the true states at each corresponding future time point $u$, as illustrated in Figure~\ref{fig:paquid-acc}. Formally, the accuracy at time $u$ for predicted states $\left( s_i(t_\mathrm{trunc}) \right)_i$ is defined as
 \[
-    \text{accuracy}(u) = \frac{1}{n_\text{test}} \sum_{i=1}^{n_\text{test}} \mathds{1}_{\chi_{u \wedge C_i}^*(\mathcal{T}_i^*) = \mathds{1}_{s_i(t_\mathrm{trunc})}}, 
+    \mathrm{accuracy}(u) = \frac{1}{n_\mathrm{test}} \sum_{i=1}^{n_\mathrm{test}} \mathds{1}_{\chi_{u \wedge C_i}^*(\mathcal{T}_i^*) = \mathds{1}_{s_i(t_\mathrm{trunc})}}, 
 \]
 where each term in the sum equals one if and only if the predicted state matches the true state for individual $i$ at time $u \wedge C_i$.
 
@@ -755,7 +757,7 @@ The data analyzed in this study are publicly available via the R package \texttt
 In nonlinear joint models with known design and known parameters
 parameters $\theta = (\gamma, Q, R, \alpha, \beta)$, the occurrence times of events conditionally on the latent variables $b_i$ and the covariates $X_i$ can be easily sampled using the inverse cumulative distribution function transform method. This may be achieved through bisection or other root-finding algorithms.
 
-The simulation of the transition process $\mathcal{T}_i^*$ conditionally on $b_i$, $X_i$, and $(T_{i0}, S_{i0})$ can be achieved drawing on the semi-Markov property  by considering one transition at a time, according to Algorithm~\ref{alg:trajectory-sim}. The algorithm is similar to Gillespie's algorithm \citep{gillespie2007stochastic}, and can also include a survival condition $T_{i1} \geq t_i^\text{surv}$ that uses the Chasles relation.
+The simulation of the transition process $\mathcal{T}_i^*$ conditionally on $b_i$, $X_i$, and $(T_{i0}, S_{i0})$ can be achieved drawing on the semi-Markov property  by considering one transition at a time, according to Algorithm~\ref{alg:trajectory-sim}. The algorithm is similar to Gillespie's algorithm \citep{gillespie2007stochastic}, and can also include a survival condition $T_{i1} \geq t_{i, \mathrm{surv}}$ that uses the Chasles relation.
 
 \begin{algorithm}[H]
     \caption{Simulation of trajectory $i$}
@@ -763,18 +765,17 @@ The simulation of the transition process $\mathcal{T}_i^*$ conditionally on $b_i
 
     \begin{algorithmic}[1]
         \renewcommand{\algorithmicrequire}{\textbf{Input:}}
-        \Require subject-specific censoring time $C_i \in \mathbb{R} \cup \{ +\infty \}$; covariates $X_i$; latent variables $b_i$; initial time-state pair $(T_{i0}, S_{i0})$; optional survival condition $T_{i1} \geq t_i^\text{surv}$, defaults to $t_i^\text{surv} = -\infty$.
+        \Require subject-specific censoring time $C_i \in \mathbb{R} \cup \{ +\infty \}$; covariates $X_i$; latent variables $b_i$; initial time-state pair $(T_{i0}, S_{i0})$; optional survival condition $T_{i1} \geq t_{i, \mathrm{surv}}$, defaults to $t_{i, \mathrm{surv}} = -\infty$.
         \Statex
         \State Initialize $\ell_i \gets 1$, $\mathcal{T}_i \gets \left( (T_{i0}, S_{i0}) \right)$.
         \Statex
         \While{$T_{i(\ell_i-1)} < C_i$ and $\{ s: (S_{i(\ell_i-1)}, s) \in E \} \neq \emptyset$}
         \For{each $s$ with $(S_{i(\ell_i-1)}, s) \in E$}
-        \State Draw $T_{i\ell_i}^s$ such that
-        \Statex \hspace{\algorithmicindent} \hspace{\algorithmicindent} $-\log \mathbb{P}(T_{i\ell_i}^s > t) = \int_{T_{i(\ell_i-1)} \vee t_i^\text{surv}}^t \lambda_i^{s \mid S_{i(\ell_i-1)}}(w \mid b_i, X_i, T_{i(\ell_i-1)}, \theta)\, dw,$
-        \Statex \hspace{\algorithmicindent} \hspace{\algorithmicindent} $\forall t \geq T_{i(\ell_i-1)} \vee u.$
+        \State Draw $T_{i\ell_i}^s$ such that $\forall t \geq T_{i(\ell_i-1)} \vee u$
+        \Statex \hspace{\algorithmicindent} \hspace{\algorithmicindent} $-\log \mathbb{P}(T_{i\ell_i}^s > t) = \int_{T_{i(\ell_i-1)} \vee t_{i, \mathrm{surv}}}^t \lambda_i^{s \mid S_{i(\ell_i-1)}}(w \mid b_i, X_i, T_{i(\ell_i-1)}, \theta)\, dw,$
         \EndFor
         \Statex
-        \State Set $T_{i\ell_i} \gets \min_m T_{i\ell_i}^s$, and $S_{i\ell_i} \gets \arg \min_m T_{i\ell_i}^s$.
+        \State Set $T_{i\ell_i} \gets \min_s T_{i\ell_i}^s$, and $S_{i\ell_i} \gets \arg \min_s T_{i\ell_i}^s$.
         \State Append $(T_{i\ell_i}, S_{i\ell_i})$ to $\mathcal{T}_i$.
         \State $\ell_i \gets \ell_i + 1$.
         \EndWhile
@@ -789,7 +790,7 @@ The simulation of the transition process $\mathcal{T}_i^*$ conditionally on $b_i
 The proof of the exactness of this algorithm is given below.
 
 \begin{proof}
-    First consider the case $t_i^\text{surv} = -\infty$. Let $t > T_{i\ell_i}$. One has
+    First consider the case $t_{i, \mathrm{surv}} = -\infty$. Let $t > T_{i\ell_i}$. One has
     \begin{align*}
         \mathbb{P}(T_{i(\ell_i+1)} > t \mid T_{i\ell_i}, S_{i\ell_i}) &= \mathbb{P}\left( \bigcap_{s : \, (E_{i(\ell_i-1)}, s) \in E} T_{i(\ell_i+1)}^s > t \mid T_{i\ell_i}, S_{i\ell_i} \right), \\
         &= \prod_{s : \, (S_{i\ell_i}, s) \in E} \mathbb{P}(T_{i(\ell_i+1)}^s > t \mid T_{i\ell_i}, S_{i\ell_i}), \\
@@ -805,7 +806,7 @@ The proof of the exactness of this algorithm is given below.
 
     Combining both, we retrieve the same joint density.
 
-    If $t_i^\text{surv} > -\infty$, one can also check that both densities are equal. Note that the condtioning only affects the first transition, as the next time $\forall \ell_i > 0, \, T_{i\ell_i} \geq t_i^\text{surv} \implies \forall \ell_i > 0, \, T_{i\ell_i} \vee t_i^\text{surv} = T_{i\ell_i}$.
+    If $t_{i, \mathrm{surv}} > -\infty$, one can also check that both densities are equal. Note that the condtioning only affects the first transition, as the next time $\forall \ell_i > 0, \, T_{i\ell_i} \geq t_{i, \mathrm{surv}} \implies \forall \ell_i > 0, \, T_{i\ell_i} \vee t_{i, \mathrm{surv}} = T_{i\ell_i}$.
 
 \end{proof}
 
