@@ -92,9 +92,7 @@ While both joint models and multi-state models offer powerful tools, they primar
 
 Previous research has initiated such integration, with models like the one proposed by Ferrer et al.~\citep{ferrer2016joint}, which combines a linear mixed sub-model for longitudinal data with a multi-state sub-model using shared random effects. This model enables the simultaneous analysis of \emph{repeated measurements of a biomarker} (the longitudinal process, e.g., PSA levels) and the \emph{times of transitions between multiple health states} (the multi-state process). It explicitly accounts for the link between these two correlated processes and uses information from the biomarker dynamics to explain or predict clinical progression events. The multi-state sub-model assumes a \emph{non-homogeneous Markov process} for the clinical progression, meaning that the future of the process depends only on the current state (Markov property) and the time elapsed since study entry (non-homogeneous property).
 
-Although Ferrer et al.~\citep{ferrer2016joint} note that their joint modeling framework could be adapted to semi-Markov processes in other contexts, their primary application to prostate cancer progression assumes a non-homogeneous Markov multi-state process. However, this framework is not well suited for arbitrary transition patterns other than the ones modeled by DAGs.
-
-While both joint models and multi-state models offer powerful tools for analyzing disease progression, they emphasize different aspects of the underlying process. Multi-state models capture the sequence and timing of discrete transitions between states, whereas joint models focus on the evolution of continuous longitudinal markers and their association with event risk. Existing joint multi-state models, such as that of Ferrer et al.~\citep*{ferrer2016joint}, are restricted to linear mixed-effects submodels and to acyclic Markov transition graphs, as their likelihood relies on a sequential factorization that is not valid when transitions form cycles. However, many biological processes involve cyclic or semi-Markov transitions and nonlinear biomarker dynamics. These cannot be handled by existing frameworks, motivating the present general formulation.
+While both joint models and multi-state models offer powerful tools for analyzing disease progression, they emphasize different aspects of the underlying process. Multi-state models capture the sequence and timing of discrete transitions between states, whereas joint models focus on the evolution of continuous longitudinal markers and their association with event risk. Existing joint multi-state models, such as that of Ferrer et al.~\citep*{ferrer2016joint}, are restricted to linear mixed-effects submodels and to acyclic Markov transition graphs, are limited to linear mixed-effects submodels and acyclic Markov transition graphs, since their reliance on binary censoring indicators inherently prevents modeling recurrent events. However, many biological processes involve cyclic or semi-Markov transitions and nonlinear biomarker dynamics. These cannot be handled by existing frameworks, motivating the present general formulation.
 
 In contrast, many real-world processes—such as recurrent disease relapse or recovery—require more flexible representations involving nonlinear biomarker dynamics, semi-Markovian dependencies, and recurrent cycles. The next section introduces a general framework that integrates these features within a unified likelihood-based formulation, enabling efficient inference and dynamic prediction along complex event trajectories.
 
@@ -112,7 +110,7 @@ The latent random effects $b_i \sim \mathcal{N}(0, Q)$ capture individual hetero
 
 Transition times and states are denoted by $(T_{i\ell}, S_{i\ell}) \in \mathbb{R} \times E$, where $E$ is the space of admissible states, and are subject to right-censoring at time $C_i$. We define the index of the last observed transition before time $t$ as $m_i(t) \coloneqq \sup \{ \ell \geq 0 : T_{i\ell} \leq t \}$. The complete sequence of transition times and states for individual $i$ is denoted by $\mathcal{T}_i^*$, whereas $\mathcal{T}_i$ denotes the corresponding right-censored sequence.
 
-\subsection{Extending Multi-State Joint Models} \label{sec:model}
+\subsection{Multi-State Processes on Arbitrary Graphs} \label{sec:model}
 
 The joint model proposed by Ferrer et al. \citep{ferrer2016joint} established a foundational link between longitudinal biomarkers and multi-state processes through shared random effects. However, their formalism relies on binary censoring indicators to characterize transitions, thereby inherently restricting the modeling framework to Directed Acyclic Graphs (DAGs) and excluding recurrent events. Indeed, the proposed model uses, for each state $k \in E$, a tuple $(T_k, \delta_k)$, where $T_k$ denotes the observed or censored time until leaving state $k$ and $\delta_k$ is an indicator equal to $1$ if the transition was observed and $0$ if the observation was censored (\textit{i.e.}, the transition was not observed). While this representation may be adequate for traditional joint models, it implicitly assumes that each state can be exited at most once and thus precludes cycles or repeated visits, making it unsuitable for a generalization to more complex multi-state processes.
 
@@ -304,68 +302,17 @@ The likelihood factorization above is valid and forms the basis for scalable inf
 
 Moreover, here, we assume that the initial state $S_{i0}$ is observed. However, the framework could also incorporate a multinomial model for unobserved initial states \citep{yiu2018clustered}.
 
-\subsection{Model Selection and Information Criteria}
+\section{Statistical Inference and Model Selection} \label{sec:inference}
 
-To compare competing model specifications, we rely on information criteria based on the marginal likelihood as defined in Section~\ref{sec:inference}. In practice, competing models are compared by selecting the specification that yields the smallest value of the chosen information criterion. For instance, the Akaike Information Criterion (AIC) \citep{akaike2003new} and the Bayesian Information Criterion (BIC) \citep{schwarz1978estimating} are standard tools. While the AIC relies on an asymptotically unbiased estimator of the $\log$-likelihood, the BIC aims to identify the true model with high probability as the sample size grows.
+In this section, we outline a practical framework for statistical inference in the proposed multi-state semi-Markov joint model. We first derive an optimization scheme for estimating model parameters through a stochastic gradient ascent procedure, and then introduce model selection criteria to assess competing specifications. These methods will be illustrated and evaluated on simulated and real datasets in Section~\ref{sec:experiments}.
 
-The Akaike Information Criterion is computed as follows
-\[
-    \mathrm{AIC} \coloneqq -2 \log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; X, Y, \mathcal{T}, C) + 2 k,
-\]
-where $k$ is the number of parameters, and $\hat{\theta}$ is a maximizer of the marginal likelihood.
-
-The Bayesian Information Criterion is similarly defined but imposes a stronger penalty for model complexity, growing in $\log n$ where $n$ is the number of observations. Particularly in the context of mixed effects models, and even more so for multi-state joint models, the number of observations $n$ may vary from one definition to another, either the total number of repeated measurements or the number of individuals \citep{delattre2014note}. To alleviate this problem, we recall the derivation of the BIC from the Laplace approximation \citep{lebarbier2006introduction}. For a prior distribution $\pi$ on a set of models $\mathcal{M}$, the Laplace approximation yields, up to constant terms (which could also be included to improve the approximation), the approximation of the posterior probability given observed data $x$ defined in Section~\ref{sec:inference} reads
-\[
-    \forall m \in \mathcal{M}, \, \log p(x \mid m) \approx \log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; x) - \frac{1}{2} \log \det(-H_{\hat{\theta}}),
-\]
-where $H_{\hat{\theta}}$ denotes the Hessian matrix of the marginal $\log$-likelihood evaluated at the Maximum Likelihood Estimator (MLE). Then, under standard regularity conditions that allow differentiation and integration to be interchanged twice, we have that
-\[
-    -\frac{1}{n} H_{\hat{\theta}} \overset{\mathbb{P}}{\to} \mathcal{I}(\hat{\theta}),
-\]
-where $\mathcal{I}(\hat{\theta})$ denotes the Fisher Information Matrix \citep{casella2001theory}. Given a reliable estimate $\widehat{\mathcal{I}}(\hat{\theta})$ of the Fisher Information Matrix (see, e.g., \citet{delattre2023computing}), we can then approximate the BIC by substituting this estimate
-\[
-    \forall m \in \mathcal{M}, \, \log p(x \mid m) \approx \log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; x) - \frac{1}{2} \log \det \hat{\mathcal{I}}_n(\hat{\theta}),
-\]
-where $\hat{\mathcal{I}}_n(\hat{\theta}) \coloneqq n \, \hat{\mathcal{I}}(\hat{\theta})$, which in practice corresponds to the matrix readily computed by our software. 
-
-Thus, our BIC criterion can be written as
-\[
-\mathrm{BIC}_\mathcal{I} \coloneqq -2 \log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; x) + \log \det \hat{\mathcal{I}}_n(\hat{\theta}).
-\]
-
-In practice, with the notation of Section~\ref{sec:inference}, the marginal $\log$-likelihood
-\[
-\log \mathcal{L}_\mathrm{marginal}(\theta; x)
-= \log \int \mathcal{L}_\mathrm{complete}(\theta ; x, b) \, db
-\]
-is generally intractable in mixed effects and joint models, since the integral with respect to the latent variables does not admit a closed form. Although the gradient of the marginal $\log$-likelihood can be efficiently estimated using Fisher's identity, the marginal $\log$-likelihood itself cannot be evaluated directly. One possibility is therefore to estimate it using bridge sampling, which provides a consistent and accurate estimator of normalizing constants and marginal likelihoods based on Markov chain Monte Carlo (MCMC) output \citep{meng1996simulating, gronau2017tutorial}. 
-
-An alternative consists in approximating the posterior distribution $p(b \mid x, \hat{\theta})$ by a Gaussian distribution, for instance via a Laplace approximation. Using the entropy identity,
-\[
-\log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; x) = \mathbb{E}_{b \sim p(\cdot \mid x, \hat{\theta})}\left[ \log \mathcal{L}(\hat{\theta}; x, b) \right] - \mathbb{E}_{b \sim p(\cdot \mid x, \hat{\theta})}\left[ \log p(b \mid x, \hat{\theta}) \right].
-\]
-
-Furthermore, leveraging independence across individuals, the entropy term decomposes as
-\[
-\mathbb{E}_{b \sim p(\cdot \mid x, \hat{\theta})}\left[ \log p(b \mid x, \hat{\theta}) \right] = \sum_{i=1}^n \mathbb{E}_{b_i \sim p(\cdot \mid x_i, \hat{\theta})}\left[ \log p(b_i \mid x_i, \hat{\theta}) \right].
-\]
-
-Approximating each $p(b_i \mid x, \hat{\theta})$ by a Gaussian distribution with covariance matrix $\Sigma_i$, we obtain
-\[
-\log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; x) \approx \mathbb{E}_{b \mid x, \hat{\theta}}\left[ \log \mathcal{L}(\hat{\theta}; x, b) \right] + \sum_{i=1}^n \underbrace{\frac{1}{2} \left( \log \det \Sigma_i + q\left( \log(2\pi) + 1 \right) \right)}_{H_i},
-\]
-where $q$ denotes the dimension of the latent vector.
-
-This approximation replaces the intractable posterior entropy with a sum of closed-form entropies of $q$-dimensional Gaussian distributions. Furthermore, each term $H_i$ depends only on its corresponding covariance matrix $\Sigma_i$, which can be easily estimated from MCMC samples of the latent variables using the empirical covariance estimator.
-
-
-\section{Statistical Inference} \label{sec:inference}
+\subsection{Stochastic Gradient Ascent}
 
 The estimation of model parameters $\theta = (\gamma, Q, R, \alpha, \beta)$ relies on two likelihood formulations: the complete-data likelihood $\mathcal{L}_{\mathrm{complete}}$, which includes latent variables, and the marginal likelihood $\mathcal{L}_\mathrm{marginal}$, obtained by integrating them out
 \[
     \mathcal{L}_\mathrm{marginal}(\theta ; X, Y, \mathcal{T}, C) = \int \mathcal{L}_\mathrm{complete}(\theta; X, Y, \mathcal{T}, C, b) \,db,
 \]
-where $b \coloneqq (b_1, \dots, b_n)$ and
+where $b \coloneqq (b_1, \dots, b_n)$, and owing to the independence across individuals
 \[
     \mathcal{L}_\mathrm{complete}(\theta  ; X, Y, \mathcal{T}, C, b) = \prod_{i=1}^n p(Y_i \mid b_i, X_i, \theta) \, p(\mathcal{T}_i \mid b_i, X_i, C_i, \theta) \, p(b_i \mid \theta).
 \]
@@ -379,7 +326,7 @@ Under interchangeability of integral and differentiation, setting $x \coloneqq (
     \nabla_\theta \log \mathcal{L}_\mathrm{marginal}(\theta ; x) = \mathbb{E}_{b \sim p(\cdot \mid x, \theta)}\left[ \nabla_\theta \log \mathcal{L}_{\mathrm{complete}}(\theta ; x, b) \right].
 \]
 
-This expectation is approximated using Monte Carlo samples from the posterior $p(\cdot \mid x, \theta)$, avoiding the need to evaluate the intractable marginal likelihood $\mathcal{L}_\mathrm{marginal}(\theta; x)$. To ensure the covariance matrices $Q$ and $R$ remain symmetric and positive-definite during optimization, we parametrize them using a $\log$-Cholesky decomposition of their inverse. By taking the logarithm of the diagonal elements of the Cholesky factors, we map the constrained covariance parameters to an unconstrained real-valued space, and avoid explicit matrix inversion for likelihood computation. This formulation naturally supports stochastic gradient ascent with MCMC-based posterior sampling and is amenable to minibatch parallelization across individuals, ensuring convergence to a critical point. The update rule is detailed in Algorithm~\ref{alg:sgd}.
+This expectation is approximated using Monte Carlo samples from the posterior $p(\cdot \mid x, \theta)$, avoiding the need to evaluate the intractable marginal likelihood $\mathcal{L}_\mathrm{marginal}(\theta; x)$. To ensure the covariance matrices $Q$ and $R$ remain symmetric and positive-definite during optimization, we parametrize them using a $\log$-Cholesky decomposition of their inverse. By taking the logarithm of the diagonal elements of the Cholesky factors, we map the constrained covariance parameters to an unconstrained real-valued space, and avoid explicit matrix inversion for likelihood computation. This formulation naturally supports stochastic gradient ascent with Markov Chain Monte Carlo (MCMC)-based posterior sampling and is amenable to minibatch parallelization across individuals, ensuring convergence to a critical point. The update rule is detailed in Algorithm~\ref{alg:sgd}.
 
 \begin{algorithm}[H]
     \caption{Stochastic gradient ascent model inference}
@@ -400,6 +347,62 @@ This expectation is approximated using Monte Carlo samples from the posterior $p
 \end{algorithm}
 
 Preconditioning matrices may also be used, such as the Fisher Information Matrix in a natural gradient ascent framework, or even specialized \emph{optimizers} such as Adam \citep{kingma2014adam}, NAdam \citep{dozat2016incorporating} or Adagrad \citep{duchi2011adaptive}. In particular, the Adam optimizer will later be used in our numerical experiments.
+
+\subsection{Model Selection and Information Criteria}
+
+To compare competing model specifications, one typically relies on information criteria based on the marginal likelihood. In practice, competing models are compared by selecting the specification that yields the smallest value of the chosen information criterion. For instance, the Akaike Information Criterion (AIC) \citep{akaike2003new} and the Bayesian Information Criterion (BIC) \citep{schwarz1978estimating} are standard tools. While the AIC relies on an asymptotically unbiased estimator of the $\log$-likelihood, the BIC aims to identify the true model with high probability as the sample size grows.
+
+The Akaike Information Criterion is computed as follows
+\[
+    \mathrm{AIC} \coloneqq -2 \log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; X, Y, \mathcal{T}, C) + 2 k,
+\]
+where $k$ is the number of parameters, and $\hat{\theta}$ is a maximizer of the marginal likelihood.
+
+The Bayesian Information Criterion is similarly defined but imposes a stronger penalty for model complexity, growing in $\log n$ where $n$ is the number of observations. Particularly in the context of mixed effects models, and even more so for multi-state joint models, the number of observations $n$ may vary from one definition to another, either the total number of repeated measurements or the number of individuals \citep{delattre2014note}. To alleviate this problem, we recall the derivation of the BIC from the Laplace approximation \citep{lebarbier2006introduction}. For a prior distribution $\pi$ on a set of models $\mathcal{M}$, the Laplace approximation yields, up to constant terms (which could also be included to improve the approximation), the approximation of the posterior probability given observed data $x$ reads
+\[
+    \forall m \in \mathcal{M}, \, \log p(x \mid m) \approx \log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; x) - \frac{1}{2} \log \det(-H_{\hat{\theta}}),
+\]
+where $H_{\hat{\theta}}$ denotes the Hessian matrix of the marginal $\log$-likelihood evaluated at the Maximum Likelihood Estimator (MLE). Then, under standard regularity conditions that allow differentiation and integration to be interchanged twice, we have that
+\[
+    -\frac{1}{n} H_{\hat{\theta}} \overset{\mathbb{P}}{\to} \mathcal{I}(\hat{\theta}),
+\]
+where $\mathcal{I}(\hat{\theta})$ denotes the Fisher Information Matrix \citep{casella2001theory}. Given a reliable estimate $\widehat{\mathcal{I}}(\hat{\theta})$ of the Fisher Information Matrix (see, e.g., \citet{delattre2023computing}), we can then approximate the BIC by substituting this estimate
+\[
+    \forall m \in \mathcal{M}, \, \log p(x \mid m) \approx \log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; x) - \frac{1}{2} \log \det \hat{\mathcal{I}}_n(\hat{\theta}),
+\]
+where $\hat{\mathcal{I}}_n(\hat{\theta}) \coloneqq n \, \hat{\mathcal{I}}(\hat{\theta})$, which in practice corresponds to the matrix readily computed by our software. 
+
+Thus, our BIC criterion can be written as
+\[
+\mathrm{BIC}_\mathcal{I} \coloneqq -2 \log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; x) + \log \det \hat{\mathcal{I}}_n(\hat{\theta}).
+\]
+
+In practice, as previously noted, the marginal $\log$-likelihood
+\[
+\log \mathcal{L}_\mathrm{marginal}(\theta; x)
+= \log \int \mathcal{L}_\mathrm{complete}(\theta ; x, b) \, db
+\]
+is generally intractable in mixed effects and joint models, since the integral with respect to the latent variables does not admit a closed form. Although the gradient of the marginal $\log$-likelihood can be efficiently estimated using Fisher's identity, the marginal $\log$-likelihood itself cannot be evaluated directly.
+
+One possibility is to estimate it using bridge sampling, which has been proven to provide consistent and accurate estimators of normalizing constants and marginal likelihoods based on MCMC output \citep{meng1996simulating, gronau2017tutorial}. 
+
+An alternative consists in approximating the posterior distribution $p(b \mid x, \hat{\theta})$ by a Gaussian distribution, for instance via a Laplace approximation. Using the entropy identity,
+\[
+\log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; x) = \mathbb{E}_{b \sim p(\cdot \mid x, \hat{\theta})}\left[ \log \mathcal{L}(\hat{\theta}; x, b) \right] - \mathbb{E}_{b \sim p(\cdot \mid x, \hat{\theta})}\left[ \log p(b \mid x, \hat{\theta}) \right],
+\]
+we can further leverage independence across individuals, so that the entropy term decomposes as
+\[
+\mathbb{E}_{b \sim p(\cdot \mid x, \hat{\theta})}\left[ \log p(b \mid x, \hat{\theta}) \right] = \sum_{i=1}^n \mathbb{E}_{b_i \sim p(\cdot \mid x_i, \hat{\theta})}\left[ \log p(b_i \mid x_i, \hat{\theta}) \right].
+\]
+
+Approximating each $p(b_i \mid x, \hat{\theta})$ by a Gaussian distribution with covariance matrix $\Sigma_i$, we obtain
+\[
+\log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; x) \approx \mathbb{E}_{b \mid x, \hat{\theta}}\left[ \log \mathcal{L}(\hat{\theta}; x, b) \right] + \sum_{i=1}^n \underbrace{\frac{1}{2} \left( \log \det \Sigma_i + q\left( \log(2\pi) + 1 \right) \right)}_{H_i},
+\]
+where $q$ denotes the dimension of the latent vector.
+
+This approximation replaces the intractable posterior entropy with a sum of closed-form entropies of $q$-dimensional Gaussian distributions. Furthermore, each term $H_i$ depends only on its corresponding covariance matrix $\Sigma_i$, which can be easily estimated from MCMC samples of the latent variables using the empirical covariance estimator.
+
 
 \section{Dynamic prediction} \label{sec:prediction}
 
@@ -556,9 +559,9 @@ We used the Adam optimizer alongside an adaptive stopping criterion that monitor
 where all operations are understood element-wise, defining the first and second moment estimates of the successive increments of the parameters.
 
 The stochastic optimization process is terminated when
-\[
+\begin{equation} \label{eq:stop}
     \vert \hat{m}_1^{(t)} \vert \leq 10^{-6} + 10^{-1} \sqrt{\hat{m}_2^{(t)}},
-\]
+\end{equation}
 where the inequalities are required to hold component-wise.
 
 \bigbreak
@@ -664,11 +667,13 @@ Additionally, since no prior information was available for the covariance matrix
 
 \subsection{Results}
 
+In this study, we randomly split the data into a training set containing $80\%$ of the observations and a test set with the remaining $20\%$, using the training set to fit the model and the test set to evaluate its predictive performance.
+
 \subsubsection{Inference}
 
-Fitting was performed using $80\%$ of the data, with the remaining $20\%$ used for testing. The model was fitted using the Adam optimizer. The optimization process was run until convergence based on the same criterion as the simulation study with a tolerance of $5\%$, which was obtained after a little less than $500$ iterations with $10$ parallel chains.
+The model was fitted using the Adam optimizer and the optimization process was run until convergence based on the Equation~\ref{eq:stop} as in the simulation study.
 
-Before displaying the fitted parameters, the Fisher Information Matrix was computed, implementing the method described in \cite{baey2023efficient}, directly taking into account shared parameters. The standard errors were then computed as the square root of the diagonal of the inverse of the Fisher Information Matrix. The results are summarized in Table~\ref{tbl:paquid-fit}.
+The Fisher Information Matrix was computed, implementing the method described in \cite{baey2023efficient}, directly taking into account shared parameters. The standard errors were then computed as the square root of the diagonal of the inverse of the Fisher Information Matrix. The results are summarized in Table~\ref{tbl:paquid-fit}.
 
 \begin{figure}[H]
     \centering
