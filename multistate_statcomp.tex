@@ -35,9 +35,9 @@
 \abstract{
     Conventional joint modeling approaches generally characterize the relationship between longitudinal biomarkers and discrete event occurrences within terminal, recurring or competing risk settings, thereby offering a limited representation of complex, multi-state trajectories.
 
-    We propose a general multi-state joint modeling framework that unifies longitudinal biomarker dynamics with multi-state time-to-event processes defined on arbitrary directed graphs. The proposed framework also accommodates nonlinear longitudinal submodels and scalable inference via stochastic gradient descent. This formulation encompasses both Markovian and semi-Markovian transition structures, allowing recurrent cycles and terminal absorptions to be naturally represented. The longitudinal and event processes are linked through shared latent structures within nonlinear mixed-effects models, extending classical joint modeling formulations.
+    We propose a general multi-state joint modeling framework that unifies longitudinal biomarker dynamics with multi-state time-to-event processes defined on arbitrary directed graphs. The proposed framework also accommodates nonlinear longitudinal submodels and scalable inference via stochastic gradient ascent. This formulation encompasses both Markovian and semi-Markovian transition structures, allowing recurrent cycles and terminal absorptions to be naturally represented. The longitudinal and event processes are linked through shared latent structures within nonlinear mixed-effects models, extending classical joint modeling formulations.
 
-    We derive the complete likelihood, model selection criteria, and develop scalable inference procedures based on stochastic gradient descent to enable high-dimensional and large-scale applications. In addition, we formulate a dynamic prediction framework that provides individualized state-transition probabilities and personalized risk assessments along complex event trajectories.
+    We derive the complete likelihood, model selection criteria, and develop scalable inference procedures based on stochastic gradient ascent to enable high-dimensional and large-scale applications. In addition, we formulate a dynamic prediction framework that provides individualized state-transition probabilities and personalized risk assessments along complex event trajectories.
 
     Through simulation and application to the PAQUID cohort, we demonstrate accurate parameter recovery and individualized prediction.
 }
@@ -191,8 +191,8 @@ For any admissible transition $(k, k') \in E$, let $\lambda_i^{k' \mid k}(t \mid
 
 The cumulative risk and the corresponding survival function are
 \begin{align*}
-     & \Lambda_i^{k' \mid k}(t \mid t_0) = \int_{t_0}^{t} \lambda_i^{k' \mid k}(w \mid t_0) \, dw, \\
-     & \mathbb{P}(T_{i,\ell+1} > t \mid T_{i\ell}, S_{i\ell}) =
+     &\Lambda_i^{k' \mid k}(t \mid t_0) = \int_{t_0}^{t} \lambda_i^{k' \mid k}(w \mid t_0) \, dw, \\
+     &\mathbb{P}(T_{i,\ell+1} > t \mid T_{i\ell}, S_{i\ell}) =
     \exp \left[-\sum_{s:(S_{i\ell},s)\in E}
         \Lambda_i^{s|S_{i\ell}}(t \mid T_{i\ell})\right].
 \end{align*}
@@ -216,7 +216,7 @@ Omitting the implicit conditioning on the individual parameters and covariates f
 Here, $h$ and $f$ define the nonlinear mixed-effects submodel,
 $g^{k' \mid k}$ represents the link between biomarker dynamics and the transition intensity, and $\lambda_0^{k' \mid k}$ denotes the baseline hazard associated with transition $(k \to k')$. This structure extends the classical joint model to arbitrary directed graphs and to both Markovian and semi-Markov specifications. 
 
-The coefficient $\alpha^{k' \mid k}$ quantifies the effect of the longitudinal biomarker dynamics on the instantaneous risk of transitioning from state $k$ to state $k'$. More concretely, for a one-unit increase in $g^{k' \mid k}(t,X_i,\psi_i)$ (holding other covariates constant), the hazard ratio for transition $(k \to k')$ is $\exp(\alpha^{k' \mid k})$. Likewise, $\beta^{k' \mid k}$ represents the effect of baseline (or time-varying) covariates $X_i$ on that same transition: a one-unit increase in a covariate $X_{ij}$ multiplies the hazard by $\exp(\beta^{k' \mid k}_j)$. Thus, $\alpha^{k' \mid k}$ captures the degree to which the biomarker trajectory (via its latent parameter $\psi_i$ or function $g^{k' \mid k}$) influences the transition risk, while $\beta^{k' \mid k}$ captures the direct effect of covariates on that transition’s risk, beyond the biomarker pathway.
+The coefficient $\alpha^{k' \mid k}$ quantifies the effect of the longitudinal biomarker dynamics on the instantaneous risk of transitioning from state $k$ to state $k'$. More concretely, for a one-unit increase in $g^{k' \mid k}(t,X_i,\psi_i)$ (holding other covariates constant), the hazard ratio for transition $(k \to k')$ is $\exp(\alpha^{k' \mid k})$. Likewise, $\beta^{k' \mid k}$ represents the effect of baseline (or time-varying) covariates $X_i$ on that same transition: a one-unit increase in a covariate $X_{ij}$ multiplies the hazard by $\exp(\beta^{k' \mid k}_j)$. Thus, $\alpha^{k' \mid k}$ captures the degree to which the biomarker trajectory (via its latent parameters $\psi_i$ or function $g^{k' \mid k}$) influences the transition risk, while $\beta^{k' \mid k}$ captures the direct effect of covariates on that transition’s risk, beyond the biomarker pathway.
 
 \subsubsection{Model Variants}
 
@@ -224,8 +224,8 @@ Two baseline hazard conventions are common and can be specified as
 \[
     \lambda_0^{k' \mid k}(t \mid T_{im_i(t)}) =
     \begin{cases}
-        \lambda_0^{k' \mid k}(t - T_{im_i(t)}) & \text{(clock reset)},   \\
-        \lambda_0^{k' \mid k}(t)               & \text{(clock forward)}.
+        \lambda_0^{k' \mid k}(t - T_{im_i(t)}) &\text{(clock reset)},   \\
+        \lambda_0^{k' \mid k}(t)  &\text{(clock forward)}.
     \end{cases}
 \]
 
@@ -286,7 +286,7 @@ This formulation generalizes the joint likelihoods of \citet{wulfsohn1997joint} 
           \begin{equation}
               \begin{aligned}
                   p(\mathcal{T}_i \mid b_i, X_i, C_i, \theta) = &\prod_{l=0}^{m_i-1} p\left((T_{i(l+1)}, S_{i(l+1)}) \mid b_i, X_i, (T_{il}, S_{il}), \theta\right) \\
-                  &\exp\left( -\sum_{s : \, (S_{im_i}, s) \in E} \Lambda_i^{s \mid S_{im_i}} (C_i \mid b_i, X_i, T_{im_i}, \theta) \right).
+     &\exp\left( -\sum_{s : \, (S_{im_i}, s) \in E} \Lambda_i^{s \mid S_{im_i}} (C_i \mid b_i, X_i, T_{im_i}, \theta) \right).
               \end{aligned}
               \label{ass:semi-markov}
           \end{equation}
@@ -308,13 +308,13 @@ To compare competing model specifications, we rely on information criteria based
 
 The Akaike Information Criterion is computed as follows
 \[
-    \mathrm{AIC} \coloneqq -2 \log \mathcal{L}_\text{marginal}(\hat{\theta}; X, Y, \mathcal{T}, C) + 2 k,
+    \mathrm{AIC} \coloneqq -2 \log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; X, Y, \mathcal{T}, C) + 2 k,
 \]
 where $k$ is the number of parameters, and $\hat{\theta}$ is a maximizer of the marginal likelihood.
 
 The Bayesian Information Criterion is similarly defined but imposes a stronger penalty for model complexity, growing in $\log n$ where $n$ is the number of observations. Particularly in the context of mixed effects models, and even more so for multi-state joint models, the number of observations $n$ may vary from one definition to another, either the total number of repeated measurements or the number of individuals \citep{delattre2014note}. To alleviate this problem, we recall the derivation of the BIC from the Laplace approximation \citep{lebarbier2006introduction}. For a prior distribution $\pi$ on a set of models $\mathcal{M}$, the Laplace approximation yields, up to constant terms (which could also be included to improve the approximation), the approximation of the posterior probability given observed data $x$ defined in Section~\ref{sec:inference} reads
 \[
-    \forall m \in \mathcal{M}, \, \log p(x \mid m) \approx \log \mathcal{L}_\text{marginal}(\hat{\theta}; x) - \frac{1}{2} \log \det(-H_{\hat{\theta}}),
+    \forall m \in \mathcal{M}, \, \log p(x \mid m) \approx \log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; x) - \frac{1}{2} \log \det(-H_{\hat{\theta}}),
 \]
 where $H_{\hat{\theta}}$ denotes the Hessian matrix of the marginal $\log$-likelihood evaluated at the Maximum Likelihood Estimator (MLE). Then, under standard regularity conditions that allow differentiation and integration to be interchanged twice, we have that
 \[
@@ -322,41 +322,41 @@ where $H_{\hat{\theta}}$ denotes the Hessian matrix of the marginal $\log$-likel
 \]
 where $\mathcal{I}(\hat{\theta})$ denotes the Fisher Information Matrix \citep{casella2001theory}. Given a reliable estimate $\widehat{\mathcal{I}}(\hat{\theta})$ of the Fisher Information Matrix (see, e.g., \citet{delattre2023computing}), we can then approximate the BIC by substituting this estimate
 \[
-    \forall m \in \mathcal{M}, \, \log p(x \mid m) \approx \log \mathcal{L}_\text{marginal}(\hat{\theta}; x) - \frac{1}{2} \log \det \hat{\mathcal{I}}_n(\hat{\theta}),
+    \forall m \in \mathcal{M}, \, \log p(x \mid m) \approx \log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; x) - \frac{1}{2} \log \det \hat{\mathcal{I}}_n(\hat{\theta}),
 \]
 where $\hat{\mathcal{I}}_n(\hat{\theta}) \coloneqq n \, \hat{\mathcal{I}}(\hat{\theta})$, which in practice corresponds to the matrix readily computed by our software. 
 
 Thus, our BIC criterion can be written as
 \[
-\mathrm{BIC}_\mathcal{I} \coloneqq -2 \log \mathcal{L}_\text{marginal}(\hat{\theta}; x) + \log \det \hat{\mathcal{I}}_n(\hat{\theta}).
+\mathrm{BIC}_\mathcal{I} \coloneqq -2 \log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; x) + \log \det \hat{\mathcal{I}}_n(\hat{\theta}).
 \]
 
 In practice, with the notation of Section~\ref{sec:inference}, the marginal $\log$-likelihood
 \[
-\log \mathcal{L}_\text{marginal}(\theta; x)
-= \log \int \mathcal{L}_\text{complete}(\theta ; x, b) \, db
+\log \mathcal{L}_\mathrm{marginal}(\theta; x)
+= \log \int \mathcal{L}_\mathrm{complete}(\theta ; x, b) \, db
 \]
-is generally intractable in mixed effects and joint models, since the integral with respect to the latent variables does not admit a closed form. Although the gradient of the marginal $\log$-likelihood can be efficiently estimated using Fisher's identity, the marginal $\log$-likelihood itself cannot be evaluated directly. One possibility is therefore to estimate it using bridge sampling, which provides a consistent and accurate estimator of normalizing constants and marginal likelihoods based on Markov chain Monte Carlo output \citep{meng1996simulating, gronau2017bridgesampling}. 
+is generally intractable in mixed effects and joint models, since the integral with respect to the latent variables does not admit a closed form. Although the gradient of the marginal $\log$-likelihood can be efficiently estimated using Fisher's identity, the marginal $\log$-likelihood itself cannot be evaluated directly. One possibility is therefore to estimate it using bridge sampling, which provides a consistent and accurate estimator of normalizing constants and marginal likelihoods based on Markov chain Monte Carlo output \citep{meng1996simulating, gronau2017tutorial}. 
 
 An alternative consists in approximating the posterior distribution $p(b \mid x, \hat{\theta})$ by a Gaussian distribution, for instance via a Laplace approximation. Using the entropy identity,
 \[
-\log \mathcal{L}_\text{marginal}(\hat{\theta}; x) = \mathbb{E}_{b \sim p(\cdot \mid x, \hat{\theta})}\left[ \log \mathcal{L}(\hat{\theta}; x, b) \right] - \mathbb{E}_{b \sim p(\cdot \mid x, \hat{\theta})}\left[ \log p(b \mid x, \hat{\theta}) \right],
+\log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; x) = \mathbb{E}_{b \sim p(\cdot \mid x, \hat{\theta})}\left[ \log \mathcal{L}(\hat{\theta}; x, b) \right] - \mathbb{E}_{b \sim p(\cdot \mid x, \hat{\theta})}\left[ \log p(b \mid x, \hat{\theta}) \right],
 \]
 and replacing $p(b \mid x, \hat{\theta})$ by a Gaussian distribution with covariance matrix $\Sigma$, we obtain the approximation
 \[
-\log \mathcal{L}_\text{marginal}(\hat{\theta}; x) \approx \mathbb{E}_{b \mid x, \hat{\theta}}\left[ \log \mathcal{L}(\hat{\theta}; x, b) \right] - \frac{1}{2} \left( \log \det \Sigma + q\left( \log(2\pi) + 1 \right) \right),
+\log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; x) \approx \mathbb{E}_{b \mid x, \hat{\theta}}\left[ \log \mathcal{L}(\hat{\theta}; x, b) \right] - \frac{1}{2} \left( \log \det \Sigma + q\left( \log(2\pi) + 1 \right) \right),
 \]
 where $q$ denotes the dimension of the latent vector. This approximation replaces the intractable posterior entropy by the closed-form entropy of a Gaussian distribution.
 
 \section{Statistical Inference} \label{sec:inference}
 
-The estimation of model parameters $\theta = (\gamma, Q, R, \alpha, \beta)$ relies on two likelihood formulations: the complete-data likelihood $\mathcal{L}_{\text{complete}}$, which includes latent variables, and the marginal likelihood $\mathcal{L}_\text{marginal}$, obtained by integrating them out
+The estimation of model parameters $\theta = (\gamma, Q, R, \alpha, \beta)$ relies on two likelihood formulations: the complete-data likelihood $\mathcal{L}_{\text{complete}}$, which includes latent variables, and the marginal likelihood $\mathcal{L}_\mathrm{marginal}$, obtained by integrating them out
 \[
-    \mathcal{L}_\text{marginal}(\theta ; X, Y, \mathcal{T}, C) = \int \mathcal{L}_\text{complete}(\theta; X, Y, \mathcal{T}, C, b) \,db,
+    \mathcal{L}_\mathrm{marginal}(\theta ; X, Y, \mathcal{T}, C) = \int \mathcal{L}_\mathrm{complete}(\theta; X, Y, \mathcal{T}, C, b) \,db,
 \]
 where
 \[
-    \mathcal{L}_\text{complete}(\theta  ; X, Y, \mathcal{T}, C, b) = \prod_{i=1}^n p(Y_i \mid b_i, X_i, \theta) \, p(\mathcal{T}_i \mid b_i, X_i, C_i, \theta) \, p(b_i \mid \theta).
+    \mathcal{L}_\mathrm{complete}(\theta  ; X, Y, \mathcal{T}, C, b) = \prod_{i=1}^n p(Y_i \mid b_i, X_i, \theta) \, p(\mathcal{T}_i \mid b_i, X_i, C_i, \theta) \, p(b_i \mid \theta).
 \]
 
 It is to be noted that this integral is typically intractable in closed form due to the nonlinear nature of the model. Several optimization methods adapted from the nonlinear mixed-effects literature can be applied, including Stochastic EM \citep{kuhn2004coupling}, Laplace approximation \citep{wolfinger1993laplace} and Gauss--Hermite quadrature, alongside MCMC-based approximations such as Metropolis--Hastings \citep{hastings1970monte} and Hamiltonian Monte Carlo \citep{neal2011mcmc}. These strategies are implemented in software such as \texttt{JMBayes} \citep{jmbayes22024,rizopoulos2020package}.
@@ -365,10 +365,10 @@ Another approach requiring mild regularity assumptions on the $\log$ marginal li
 
 Under interchangeability of integral and differentiation, setting $x \coloneqq (X, Y, \mathcal{T}, C)$ for convenience, the Fisher identity writes
 \[
-    \nabla_\theta \log \mathcal{L}_\text{marginal}(\theta ; x) = \mathbb{E}_{b \sim p(\cdot \mid x, \theta)}\left[ \nabla_\theta \log \mathcal{L}_{\text{complete}}(\theta ; x, b) \right].
+    \nabla_\theta \log \mathcal{L}_\mathrm{marginal}(\theta ; x) = \mathbb{E}_{b \sim p(\cdot \mid x, \theta)}\left[ \nabla_\theta \log \mathcal{L}_{\text{complete}}(\theta ; x, b) \right].
 \]
 
-This expectation is approximated using Monte Carlo samples from the posterior $p(\cdot \mid x, \theta)$, avoiding the need to evaluate the intractable marginal likelihood $\mathcal{L}_\text{marginal}(\theta; x)$. To ensure the covariance matrices $Q$ and $R$ remain symmetric and positive-definite during optimization, we parametrize them using a $\log$-Cholesky decomposition of their inverse. By taking the logarithm of the diagonal elements of the Cholesky factors, we map the constrained covariance parameters to an unconstrained real-valued space, and avoid explicit matrix inversion for likelihood computation. This formulation naturally supports stochastic gradient ascent with MCMC-based posterior sampling and is amenable to minibatch parallelization across individuals, ensuring convergence to a critical point. The update rule is detailed in Algorithm~\ref{alg:sgd}.
+This expectation is approximated using Monte Carlo samples from the posterior $p(\cdot \mid x, \theta)$, avoiding the need to evaluate the intractable marginal likelihood $\mathcal{L}_\mathrm{marginal}(\theta; x)$. To ensure the covariance matrices $Q$ and $R$ remain symmetric and positive-definite during optimization, we parametrize them using a $\log$-Cholesky decomposition of their inverse. By taking the logarithm of the diagonal elements of the Cholesky factors, we map the constrained covariance parameters to an unconstrained real-valued space, and avoid explicit matrix inversion for likelihood computation. This formulation naturally supports stochastic gradient ascent with MCMC-based posterior sampling and is amenable to minibatch parallelization across individuals, ensuring convergence to a critical point. The update rule is detailed in Algorithm~\ref{alg:sgd}.
 
 \begin{algorithm}[H]
     \caption{Stochastic gradient ascent model inference}
@@ -376,19 +376,19 @@ This expectation is approximated using Monte Carlo samples from the posterior $p
 
     \begin{algorithmic}[1]
         \algrenewcommand\algorithmicrequire{\textbf{Input:}}
-        \Require data $x$; initial parameter $\theta^{(0)}$; step sizes $(\eta_t)_{t \geq 0}$ with $\sum_t \eta_t = +\infty$, $\sum_t \eta_t^2 < +\infty$; batch size $K$; sampler $p^{\mathrm{MCMC}}$; stopping criterion.
+        \Require data $x$; initial parameters $\theta^{(0)}$; step sizes $(\eta_t)_{t \geq 0}$ with $\sum_t \eta_t = +\infty$, $\sum_t \eta_t^2 < +\infty$; batch size $K$; sampler $p^{\mathrm{MCMC}}$; stopping criterion.
         \Statex
         \State $t \gets 0$
         \While{not converged}
         \State Draw $b_k \sim p(\cdot \mid x, \theta^{(t)}) \approx p^\text{MCMC}$.
-        \State $\theta^{(t+1)} \gets \theta^{(t)} + \frac{\eta_t}{K} \sum_{k=1}^K \nabla_\theta \log \mathcal{L}_\text{complete} (\theta^{(t)} ; x, b_k)$.
+        \State $\theta^{(t+1)} \gets \theta^{(t)} + \frac{\eta_t}{K} \sum_{k=1}^K \nabla_\theta \log \mathcal{L}_\mathrm{complete} (\theta^{(t)} ; x, b_k)$.
         \State $t \gets t + 1$
         \EndWhile
         \State \Return $\hat{\theta}$
     \end{algorithmic}
 \end{algorithm}
 
-Preconditioning matrices may also be used, such as the Fisher Information Matrix in a natural gradient descent framework, or even specialized \emph{optimizers} such as Adam \citep{kingma2014adam}, NAdam \citep{dozat2016incorporating} or Adagrad \citep{duchi2011adaptive}. In particular, the Adam optimizer will later be used in our numerical experiments.
+Preconditioning matrices may also be used, such as the Fisher Information Matrix in a natural gradient ascent framework, or even specialized \emph{optimizers} such as Adam \citep{kingma2014adam}, NAdam \citep{dozat2016incorporating} or Adagrad \citep{duchi2011adaptive}. In particular, the Adam optimizer will later be used in our numerical experiments.
 
 \section{Dynamic prediction} \label{sec:prediction}
 
@@ -453,13 +453,13 @@ Numerous quantities of interest may be encompassed by this framework. We give mu
 where $(v_0, v_1, \dots, v_k)$ ranges over all directed paths in $G$.
 
 \begin{example}[State at time $u$] \label{ex:state-at-time-u}
-    Let $G = (V, E)$ be a finite directed acyclic graph, $u \in \mathbb{R}$ be a fixed time, and $\mathbb{Y} = V$ be the set of possible states. Let $\tau_i = \inf \{ n \in \mathbb{N}: T_{in} \geq u \text{ or } S_{in} \text{ is absorbing} \}$. Clearly, $\tau_i \leq \operatorname{depth}(G) < +\infty$. Then, take $\chi_u^*(\mathcal{T}_i^*) = S_{i\tau_i}$, which corresponds to the state of the individual $i$ at time $u$. In particular, if $V = \{ 0, 1 \}$ and $E = \{ (0, 1) \}$, we recover the special case used for survival probability estimation in standard joint models \citep{rizopoulos2011dynamic}.
+    Let $G = (V, E)$ be a finite directed acyclic graph, $u \in \mathbb{R}$ be a fixed time, and $\mathbb{Y} = \Delta(V)$ be the simplex of distributions over states. Let $\tau_i = \inf \{ n \in \mathbb{N}: T_{in} \geq u \text{ or } S_{in} \text{ is absorbing} \}$. Clearly, $\tau_i \leq \operatorname{depth}(G) < +\infty$. For each state $v \in V$, let $\mathds{1}_v \in \mathbb{Y}$ denote the vector that is $1$ at entry $v$ and $0$ elsewhere (a one-hot encoding of $v$). Then, we set $\chi_u^*(\mathcal{T}_i^*) = \mathds{1}_{S_{i\tau_i}} \in \mathbb{Y}$ representing the state occupied by individual $i$ at time $u$. In particular, if $V = \{ 0, 1 \}$ and $E = \{ (0, 1) \}$, we recover the special case used for survival probability estimation in standard joint models \citep{rizopoulos2011dynamic}.
 \end{example}
 
 \bigbreak
 
 \begin{example}[Hitting time] \label{ex:hitting-time}
-    Let $G = (V, E)$ be a finite directed acyclic graph, $\mathbb{A} \subseteq V$ a non-empty subset of states, and $\mathbb{Y} = \mathbb{R} \cup \{ +\infty \}$. For any two non-empty sets $\mathbb{A}, \, \mathbb{B} \subseteq V$, we note $\mathbb{A} \rightsquigarrow \mathbb{B}$ if there exists a path from $\mathbb{A}$ to $\mathbb{B}$ in $G$. Let $\tau_i = \inf \{ n \in \mathbb{N} : S_{in} \in \mathbb{A} \vee  \{ S_{in} \} \not \rightsquigarrow \mathbb{A} \}$. Then, $\tau_i \leq \operatorname{depth}(G) < +\infty$ and take $\chi_{\mathbb{A}}^*(\mathcal{T}_i^*) = T_{i\tau_i} + \mathds{1}_{\{ S_{i\tau_i} \} \not \rightsquigarrow \mathbb{A}} (+\infty)$ represents the hitting time for the set $\mathbb{A}$.
+    Let $G = (V, E)$ be a finite directed acyclic graph, $\mathbb{A} \subseteq V$ a non-empty subset of states, and $\mathbb{Y} = \mathbb{R} \cup \{ +\infty \}$. For any two non-empty sets $\mathbb{A}, \, \mathbb{B} \subseteq V$, we note $\mathbb{A} \rightsquigarrow \mathbb{B}$ if there exists a path from $\mathbb{A}$ to $\mathbb{B}$ in $G$. Let $\tau_i = \inf \{ n \in \mathbb{N} : S_{in} \in \mathbb{A} \vee \{ S_{in} \} \not \rightsquigarrow \mathbb{A} \}$. Then, $\tau_i \leq \operatorname{depth}(G) < +\infty$ and we set $\chi_{\mathbb{A}}^*(\mathcal{T}_i^*) = T_{i\tau_i} + \mathds{1}_{\{ S_{i\tau_i} \} \not \rightsquigarrow \mathbb{A}} (+\infty)$ represents the hitting time for the set $\mathbb{A}$.
 \end{example}
 
 \bigbreak
@@ -478,7 +478,7 @@ This simulation-based dynamic prediction framework generalizes classical approac
 
 \section{Simulation Study} \label{sec:experiments}
 
-The purpose of this simulation study is to evaluate the finite-sample performance and convergence properties of the proposed inference algorithm under controlled conditions where the true parameters are known. We simulate data from a three-state semi-Markov process coupled with a nonlinear longitudinal biomarker trajectory, representing a simplified disease progression model. This setup allows us to assess both statistical accuracy and computational scalability of the stochastic-gradient estimation procedure.
+The purpose of this simulation study is to evaluate the finite-sample performance and convergence properties of the proposed inference algorithm under controlled conditions where the true parameters are known. We simulate data from a three-state semi-Markov process coupled with a nonlinear longitudinal biomarker trajectory, representing a simplified disease progression model. This setup allows us to assess both statistical estimation error (see Table~\ref{tbl:convergence-rmse}) and computational scalability of the stochastic gradient estimation procedure. To ensure statistical reliability, we perform $n_\mathrm{runs} = 100$ independent simulations.
 
 All simulations, estimations, and figures reported in this section were produced using the open-source \texttt{jmstate} Python package, available on \href{https://pypi.org/project/jmstate/}{PyPI}, which we developed to implement the multi-state joint modeling framework and inference algorithms described in Sections~\ref{sec:model} and~\ref{sec:inference}.
 
@@ -509,12 +509,6 @@ Longitudinal data were collected at up to $20$ random time points per subject an
 
 The parameter vector lies in $\mathbb{R}^{16}$. Each simulated dataset comprised $n=1000$ individuals, generating roughly balanced transition counts (Figure~\ref{fig:simulation}).
 
-\subsection{Estimator Convergence and Accuracy}
-
-Parameter estimation was performed using the stochastic-gradient inference procedure of Section~\ref{sec:inference}, with the Adam optimizer (learning rate $0.5$, batch size $K=100$) and an adaptive stopping criterion based on the first and second moments of parameter differences. Convergence was typically achieved in $400$--$500$ iterations and required around $12$ seconds per run on an AMD Ryzen~5 processor.
-
-Across $n_\text{runs} = 100$ independent replications, the mean relative bias of all parameters remained below $2\%$, and the root-mean-square error (RMSE) scaled approximately as $n^{-1/2}$. Parameters governing the biomarker trajectory $(\gamma, Q, R)$ were consistently well identified, while association coefficients $(\alpha^{k' \mid k}, \beta^{k' \mid k})$ exhibited slightly higher variability for rare transitions. Representative convergence trajectories are shown in Figure~\ref{fig:fitting-plots}, and quantitative results are summarized in Table~\ref{tbl:convergence-rmse}.
-
 A short summary of the longitudinal process as well as the trajectories
 is given by the Figure~\ref{fig:simulation} below.
 
@@ -528,11 +522,11 @@ is given by the Figure~\ref{fig:simulation} below.
         \centering
         \begin{tabular}{|c|c|}
             \hline
-            \textbf{From $\rightarrow$ To} & \textbf{\# Observations} \\
+            \textbf{From $\rightarrow$ To} &\textbf{\# Observations} \\
             \hline
-            $0 \rightarrow 1$              & 613                      \\
-            $0 \rightarrow 2$              & 375                      \\
-            $1 \rightarrow 2$              & 592                      \\
+            $0 \rightarrow 1$ &613\\
+            $0 \rightarrow 2$ &375\\
+            $1 \rightarrow 2$ &592\\
             \hline
         \end{tabular}
     \end{minipage}
@@ -542,21 +536,23 @@ is given by the Figure~\ref{fig:simulation} below.
 
 \subsection{Estimator Convergence}
 
-To illustrate the convergence of the estimator, we examine the optimization process for a particular run with $n = 1000$ (see Figure~\ref{fig:fitting-plots}), as well as RMSE values computed from $n_\text{runs} = 100$ independent runs on different simulated datasets, all generated from the same underlying distribution. The results of these simulations are shown in Table
-\ref{tbl:convergence-rmse}.
+For each run, model parameters were estimated using the stochastic gradient ascent procedure described in Section~\ref{sec:inference}. Although the choice of initial parameters can significantly impact the optimization process, we set all initial parameter values to zero and initialize both covariance matrices $Q$ and $R$ as identity matrices, thereby avoiding any assumptions about prior knowledge of the parameters.
 
-To fit the model, we first have to define initial parameters, which can be particularly important for the optimization process if the model is not well-behaved. In the present case, without prior knowledge of the true parameters, we zero the values and use the identity matrix for both covariance matrices.
-
-Formally, for any $t \geq 1$ and $i \in \{ 1, 2 \}$, consider
+We used the Adam optimizer alongside an adaptive stopping criterion that monitors the first and second moments of parameter changes. Convergence was typically reached within $400$–$500$ iterations, requiring approximately $12$ seconds per run on an AMD Ryzen~5 processor. Formally, for any $t \geq 1$ and $i \in \{ 1, 2 \}$, consider $(\beta_1, \beta_2) = (0.99, 0.99)$ and
 \[
     m_i^{(t)} \gets \beta_i m_i^{(t-1)} + (1 - \beta_i) (\theta^{(t)} - \theta^{(t-1)})^i, \quad \hat{m}_i^{(t)} = \frac{m_i^{(t)}}{1 - \beta_i^t},
 \]
-and the optimization process is terminated when
-\[
-    \vert \hat{m}_1^{(t)} \vert \leq 10^{-6} + 10^{-1} \sqrt{\hat{m}_2^{(t)}}.
-\]
+where all operations are understood element-wise, defining the first and second moment estimates of the successive increments of the parameters.
 
-The Figure \ref{fig:fitting-plots} shows the evolution of the parameters during the optimization process, and Table~\ref{tbl:convergence-rmse} summarizes the accuracy of the inferred parameters.
+The stochastic optimization process is terminated when
+\[
+    \vert \hat{m}_1^{(t)} \vert \leq 10^{-6} + 10^{-1} \sqrt{\hat{m}_2^{(t)}},
+\]
+where the inequalities are required to hold component-wise.
+
+\bigbreak
+
+To illustrate the convergence of the estimator, we examine the optimization process for a particular run with $n = 1000$ in Figure~\ref{fig:fitting-plots}, as well as RMSE values computed from $n_\text{runs} = 100$ independent runs on different simulated datasets, all generated from the same underlying distribution, as shown in Table~\ref{tbl:convergence-rmse}.
 
 \begin{figure}[H]
     \centering
@@ -593,7 +589,11 @@ The simulation confirms that the proposed inference method accurately recovers a
 \subsection{Introduction}
 
 The data used in this section originates from the PAQUID cohort
-\citep{Letenneur1994}, a large prospective population-based study initiated in southwestern France in 1988, aimed at understanding the determinants and trajectories of aging. A subsample of $n = 500$ individuals was followed over a period of up to $20$ years \citep{Proust-Lima2017}, with repeated measures of cognitive and physical health, as well as socio-demographic characteristics. In particular, global cognitive functioning was assessed through the Mini-Mental State Examination (MMSE, see Figure~\ref{fig:paquid}), while physical dependency was evaluated using the HIER scale, which classifies subjects into four ordered states (see Figure~\ref{fig:hier-graph}): $0$ (no dependency), $1$ (mild dependency), $2$ (moderate dependency), and $3$ (severe dependency). In this work, we focus on the association between cognitive decline and the progression of physical dependency by jointly modeling the longitudinal trajectory of MMSE scores and the transitions between the four HIER states using a joint multi-state model. More specifically, the state of an individual at a given time $t$ is defined as the highest HIER dependency score between trial entry and $t$. This approach allows us to characterize the dynamic interrelationship between cognitive and physical aging processes within a unified statistical framework.
+\citep{Letenneur1994}, a large prospective population-based study initiated in southwestern France in 1988, aimed at understanding the determinants and trajectories of aging. A subsample of $n = 500$ individuals was followed over a period of up to $20$ years \citep{Proust-Lima2017}, with repeated measures of cognitive and physical health, as well as socio-demographic characteristics. 
+
+In particular, global cognitive functioning was assessed through the Mini-Mental State Examination (MMSE, see Figure~\ref{fig:paquid}), while physical dependency was evaluated using the HIER scale, which classifies subjects into four ordered states (see Figure~\ref{fig:hier-graph}): $0$ (no dependency), $1$ (mild dependency), $2$ (moderate dependency), and $3$ (severe dependency). Individual covariates correspond to a pair of binary variables indicating whether or not the individual has a diploma and is a male $\left( \mathds{1}_\mathrm{CEP}(i), \mathds{1}_\mathrm{male}(i) \right) \in \{0, 1\}^2$.
+
+In this work, we focus on the association between cognitive decline and the progression of physical dependency by jointly modeling the longitudinal trajectory of MMSE scores and the transitions between the four HIER states using a joint multi-state model. More specifically, the state of an individual at a given time $t$ is defined as the highest HIER dependency score between trial entry and $t$, and progression is therefore monotone. This approach allows us to characterize the dynamic interrelationship between cognitive and physical aging processes within a unified statistical framework.
 
 Both time and longitudinal values were normalized in $[-1, 1]$. This technique ensured stable and fast convergence of the optimization process by keeping all parameters on roughly the same scale.
 
@@ -607,14 +607,14 @@ Both time and longitudinal values were normalized in $[-1, 1]$. This technique e
         \centering
         \begin{tabular}{|c|c|}
             \hline
-            \textbf{From $\rightarrow$ To} & \textbf{\# Observations} \\
+            \textbf{From $\rightarrow$ To} &\textbf{\# Observations} \\
             \hline
-            $0 \rightarrow 1$              & 85                       \\
-            $1 \rightarrow 2$              & 135                      \\
-            $2 \rightarrow 3$              & 86                       \\
-            $0 \rightarrow 2$              & 44                       \\
-            $1 \rightarrow 3$              & 15                       \\
-            $0 \rightarrow 3$              & 11                       \\
+            $0 \rightarrow 1$ &85 \\
+            $1 \rightarrow 2$ &135\\
+            $2 \rightarrow 3$ &86 \\
+            $0 \rightarrow 2$ &44 \\
+            $1 \rightarrow 3$ &15 \\
+            $0 \rightarrow 3$ &11 \\
             \hline
         \end{tabular}
     \end{minipage}
@@ -622,7 +622,7 @@ Both time and longitudinal values were normalized in $[-1, 1]$. This technique e
     \label{fig:paquid}
 \end{figure}
 
-Therefore, the chosen transition graph is as follows, and only allows monotonic transitions from a lower level of physical dependency to a higher one.
+The transition graph was chosen as follows in Figure~\ref{fig:hier-graph}, and only allows monotonic transitions from a lower level of physical dependency to a higher one. We considered an exponential baseline hazard model for transitions, with a \emph{clock reset} specification, and the parameters of these exponential baseline hazards were jointly optimized with the model parameters.
 
 \begin{figure}[H]
     \centering
@@ -630,10 +630,6 @@ Therefore, the chosen transition graph is as follows, and only allows monotonic 
     \caption{Schematic representation of the four ordered HIER states, with possible transitions. HIER quantifies physical dependency ($0$: no dependency to $3$: severe dependency) \citep{Proust-Lima2017}.}
     \label{fig:hier-graph}
 \end{figure}
-
-We consider an exponential baseline hazard model for transitions, with a \emph{clock reset} specification. The parameters of these exponential baseline hazards are jointly optimized with the model parameters.
-
-Moreover, we impose a particular substructure on the model, where $\forall (k, k') \in E, \, \beta^{k' \mid k} = \beta$.
 
 In the light of Figure~\ref{fig:paquid}, the regression and link
 functions were taken to be scaled and shifted hyperbolic tangent and its derivative respectively such that the normalized MMSE score always has a value of $1$ when $t \to -\infty$ and is not increasing
@@ -650,7 +646,10 @@ functions were taken to be scaled and shifted hyperbolic tangent and its derivat
     \end{cases}
 \]
 
-At last, individual covariates correspond to a pair of binary variables indicating whether or not the individual has a diploma and is a male $\left( \mathds{1}_\text{CEP}(i), \mathds{1}_\text{male}(i) \right) \in \{0, 1\}^2$.
+
+Moreover, we imposed a specific substructure on the model by setting $\forall (k, k') \in E, \, \beta^{k' \mid k} = \beta$, which helped mitigate issues arising from the small number of observations in some groups. 
+
+Additionally, since no prior information was available for the covariance matrix of the latent effects $Q \in \mathbb{R}^{3 \times 3}$, we used a full $\log$-Cholesky parametrization of the precision matrix $Q^{-1}$, with six parameters denoted $\tilde{Q}_1, \dots, \tilde{Q}_6$.
 
 \subsection{Results}
 
@@ -664,20 +663,20 @@ Before displaying the fitted parameters, the Fisher Information Matrix was compu
     \centering
     \begin{tabular}{lcc|lcc}
         \hline
-        Parameter & Inferred value & Std. error & Parameter & Inferred value & Std. error \\
+        Parameter &Inferred value &Std. error &Parameter &Inferred value &Std. error \\
         \hline
-        $\gamma_1$ & \textbf{2.1600} & \textbf{0.0470} & $\gamma_2$ & \textbf{0.1590} & \textbf{0.0140} \\
-        $\gamma_3$ & \textbf{1.0010} & \textbf{0.0030} & $\tilde{Q}_1$ & \textbf{-0.5700} & 0.0430 \\
-        $\tilde{Q}_2$ & 0.9570 & 0.0960 & $\tilde{Q}_3$ & 0.3820 & 0.0430 \\
-        $\tilde{Q}_4$ & -0.2050 & 0.1570 & $\tilde{Q}_5$ & \textbf{-2.3310} & \textbf{0.1380} \\
-        $\tilde{Q}_6$ & 0.5220 & 0.0470 & $\tilde{R}$ & \textbf{2.0830} & \textbf{0.0260} \\
-        $\alpha^{3 \mid 1}$ & 0.7220 & 0.7150 & $\alpha^{1 \mid 0}$ & -0.5400 & 0.4030 \\
-        $\alpha^{2 \mid 1}$ & \textbf{-1.0030} & \textbf{0.2000} & $\alpha^{2 \mid 0}$ & \textbf{-0.1210} & \textbf{0.0380} \\
-        $\alpha^{3 \mid 2}$ &  -0.0480 & 0.2520 & $\alpha^{3 \mid 0}$ & \textbf{-0.3070} & \textbf{0.0740} \\
-        $\beta_1$ & -0.2990 & 0.9130 & $\beta_2$ & 0.0970 & 1.0300 \\
+        $\gamma_1$ &\textbf{2.1600} &\textbf{0.0470} &$\gamma_2$ &\textbf{0.1590} &\textbf{0.0140} \\
+        $\gamma_3$ &\textbf{1.0010} &\textbf{0.0030} &$\tilde{Q}_1$ &\textbf{-0.5700} &0.0430 \\
+        $\tilde{Q}_2$ &0.9570 &0.0960 &$\tilde{Q}_3$ &0.3820 &0.0430 \\
+        $\tilde{Q}_4$ &-0.2050 &0.1570 &$\tilde{Q}_5$ &\textbf{-2.3310} &\textbf{0.1380} \\
+        $\tilde{Q}_6$ &0.5220 &0.0470 &$-\frac{1}{2} \log(R)$ &\textbf{2.0830} &\textbf{0.0260} \\
+        $\alpha^{3 \mid 1}$ &0.7220 &0.7150 &$\alpha^{1 \mid 0}$ &-0.5400 &0.4030 \\
+        $\alpha^{2 \mid 1}$ &\textbf{-1.0030} &\textbf{0.2000} &$\alpha^{2 \mid 0}$ &\textbf{-0.1210} &\textbf{0.0380} \\
+        $\alpha^{3 \mid 2}$ & -0.0480 &0.2520 &$\alpha^{3 \mid 0}$ &\textbf{-0.3070} &\textbf{0.0740} \\
+        $\beta_1$ &-0.2990 &0.9130 &$\beta_2$ &0.0970 &1.0300 \\
         \hline
     \end{tabular}
-    \caption{Inferred parameters and their estimated standard deviations. Bold values mean $p < 0.05$ (variance parameters excluded).}
+    \caption{Inferred parameters and their estimated standard deviations. Bold values mean $p < 0.05$ (covariance parameters excluded).}
     \label{tbl:paquid-fit}
 \end{figure}
 
@@ -687,15 +686,18 @@ The negative values of the association parameters $\alpha$ suggest that greater 
 
 \subsubsection{Dynamic Prediction}
 
-Using the $n_\text{test} = 100$ individuals not included in the model fitting, we performed dynamic prediction through a single Monte Carlo integration scheme as defined in Section~\ref{sec:prediction}. For each individual, longitudinal measurements and trajectories were truncated at various times $t$, and predictions were made for future time points $u \geq t$ beyond the truncation. Accuracy was then assessed by comparing the most likely predicted state with the true state at each corresponding future time point $u$, as illustrated in Figure~\ref{fig:paquid-acc}.
-
-Formally, the prediction function $\chi_u^*$ is defined by Example
-\ref{ex:state-at-time-u}, and the accuracy measure at time $t$ for predicted states $(s_i)_i$ is defined as
+Using the $n_\text{test} = 100$ individuals not included in the model fitting, we performed dynamic prediction through a single Monte Carlo integration scheme as defined in Section~\ref{sec:prediction}. For each individual, longitudinal measurements and trajectories were truncated at various times $t_\mathrm{trunc}$, and predictions were made for future time points $u \geq t_\mathrm{trunc}$ beyond the truncation. For any new individual $i$ in the test set, we consider the quantity $\chi_{u \wedge C_i}^*(\mathcal{T}_i^*)$ as defined by Example~\ref{ex:state-at-time-u}. It is estimated using the information available up to the conditioning (or truncation) time $t_\text{trunc}$, \textit{i.e.}, $\left( \mathcal{Y}_i(t_\text{trunc}), \mathcal{S}_i(t_\text{trunc}) \right)$, according to the methodology of Section~\ref{sec:prediction}. Given an estimate $\hat{\chi}_{i, u \wedge C_i}$, the predicted state of the individual $i$ at time $u \wedge C_i$ is then defined as the most probable state
 \[
-    \text{accuracy}(u) = \frac{1}{n_\text{test}} \sum_{i=1}^{n_\text{test}} \mathds{1}_{\chi_{u \wedge C_i}(\mathcal{T}_i) = s_i}.
+s_i(t_\mathrm{trunc}) \in \operatorname*{\arg \max}_{k \in \{ 0, 1, 2, 3 \}} \left( \hat{\chi}_{i, u \wedge C_i} \right)_k
 \]
 
-Although $\mathcal{T}_i^*$ is unknown, the quantity $\chi_{u \wedge C_i}(\mathcal{T}_i)$ may be computed based on the censored trajectories. However, incorporating censoring times into prediction functions relies on information that is, in principle, not available at prediction time. Nevertheless, this inclusion is necessary to ensure fairness in accuracy metrics, since individuals who are not censored are generally more likely to have progressed to more advanced states of physical dependency than those who are censored.
+For each fixed truncation time $t_\mathrm{trunc}$, common to all test individuals, accuracy was then assessed by comparing the predicted states with the true states at each corresponding future time point $u$, as illustrated in Figure~\ref{fig:paquid-acc}. Formally, the accuracy at time $u$ for predicted states $\left( s_i(t_\mathrm{trunc}) \right)_i$ is defined as
+\[
+    \text{accuracy}(u) = \frac{1}{n_\text{test}} \sum_{i=1}^{n_\text{test}} \mathds{1}_{\chi_{u \wedge C_i}^*(\mathcal{T}_i^*) = \mathds{1}_{s_i(t_\mathrm{trunc})}}, 
+\]
+where each term in the sum equals one if and only if the predicted state matches the true state for individual $i$ at time $u \wedge C_i$.
+
+Additionally, although $\mathcal{T}_i^*$ is unknown, the quantity $\chi_{u \wedge C_i}^*(\mathcal{T}_i^*)$ can be computed from the censored trajectory $\mathcal{T}_i$, since it does not depend on any events occurring after $C_i$. However, incorporating censoring times into prediction functions relies on information that is, in principle, not available at prediction time. Nevertheless, this inclusion is necessary to ensure fairness in accuracy metrics, since individuals who are not censored are generally more likely to have progressed to more advanced states of physical dependency than those who are censored.
 
 \begin{minipage}{0.5\textwidth}
     \begin{figure}[H]
@@ -707,12 +709,11 @@ Although $\mathcal{T}_i^*$ is unknown, the quantity $\chi_{u \wedge C_i}(\mathca
 \end{minipage}
 \hfill
 \begin{minipage}{0.45\textwidth}
-    Here, the initial drops correspond to the truncation times, before which the accuracy is always $100\%$.
+    Here, each initial drop corresponds to a truncation time, before which accuracy remains at $100\%$ by design, since the predictor is almost surely constant given the observed history.
 
     \bigbreak
 
     As expected from dynamic predictions, the accuracy increases as more data is available, therefore when the truncation time grows. We also observe that the longer the prediction horizon, the lower the accuracy of the predictions.
-
 \end{minipage}
 
 \section{Conclusion} \label{sec:conclusion}
@@ -754,7 +755,7 @@ The data analyzed in this study are publicly available via the R package \texttt
 In nonlinear joint models with known design and known parameters
 parameters $\theta = (\gamma, Q, R, \alpha, \beta)$, the occurrence times of events conditionally on the latent variables $b_i$ and the covariates $X_i$ can be easily sampled using the inverse cumulative distribution function transform method. This may be achieved through bisection or other root-finding algorithms.
 
-The simulation of the transition process $\mathcal{T}_i^*$ conditionally on $b_i$, $X_i$, and $(T_{i0}, S_{i0})$ can be achieved drawing on the semi-Markov property  by considering one transition at a time, according to Algorithm~\ref{alg:trajectory-sim}. The algorithme is similar to Gillespie's algorithm \citep{gillespie2007stochastic}, and can also include a survival condition $T_{i1} \geq t_i^\text{surv}$ that uses the Chasles relation.
+The simulation of the transition process $\mathcal{T}_i^*$ conditionally on $b_i$, $X_i$, and $(T_{i0}, S_{i0})$ can be achieved drawing on the semi-Markov property  by considering one transition at a time, according to Algorithm~\ref{alg:trajectory-sim}. The algorithm is similar to Gillespie's algorithm \citep{gillespie2007stochastic}, and can also include a survival condition $T_{i1} \geq t_i^\text{surv}$ that uses the Chasles relation.
 
 \begin{algorithm}[H]
     \caption{Simulation of trajectory $i$}
@@ -790,16 +791,16 @@ The proof of the exactness of this algorithm is given below.
 \begin{proof}
     First consider the case $t_i^\text{surv} = -\infty$. Let $t > T_{i\ell_i}$. One has
     \begin{align*}
-        \mathbb{P}(T_{i(\ell_i+1)} > t \mid T_{i\ell_i}, S_{i\ell_i}) &= \mathbb{P}(\bigcap_{s : \, (E_{i(\ell_i-1)}, s) \in E} T_{i(\ell_i+1)}^s > t \mid T_{i\ell_i}, S_{i\ell_i}), \\
+        \mathbb{P}(T_{i(\ell_i+1)} > t \mid T_{i\ell_i}, S_{i\ell_i}) &= \mathbb{P}\left( \bigcap_{s : \, (E_{i(\ell_i-1)}, s) \in E} T_{i(\ell_i+1)}^s > t \mid T_{i\ell_i}, S_{i\ell_i} \right), \\
         &= \prod_{s : \, (S_{i\ell_i}, s) \in E} \mathbb{P}(T_{i(\ell_i+1)}^s > t \mid T_{i\ell_i}, S_{i\ell_i}), \\
         &= \exp \Big(-\sum_{s : \, (S_{i\ell_i}, s) \in E} \Lambda_i^{s \mid S_{i(\ell_i-1)}}\big(t \mid b_i, X_i, T_{i\ell_i}, \theta)\Big).
     \end{align*}
     
     Furthermore
     \begin{align*}
-        & \mathbb{P}(S_{i(\ell_i+1)} \mid T_{i(\ell_i+1)} = t, T_{i\ell_i}, S_{i\ell_i}) \\
-         & \propto p(\{ T_{i(\ell_i+1)}^{S_{i(\ell_i+1)}} = t \} \cap \bigcap_{\substack{s : \, (S_{i\ell_i}, s) \in E, \\ s \neq S_{i(\ell_i+1)}}} \{ T_{i(\ell_i+1)}^s \geq t \} \mid T_{i\ell_i}, S_{i\ell_i}), \\
-         & = \lambda_i^{S_{i(\ell_i+1)} \mid S_{i\ell_i}}\big(t \mid \theta, X_i, T_{i\ell_i}, b_i) \exp \Big(-\sum_{s : \, (S_{i\ell_i}, s) \in E} \Lambda_i^{s \mid S_{i\ell_i}}\big(t \mid b_i, X_i, T_{i\ell_i}, \theta)\Big).
+        &\mathbb{P}(S_{i(\ell_i+1)} \mid T_{i(\ell_i+1)} = t, T_{i\ell_i}, S_{i\ell_i}) \\
+         &\propto p(\{ T_{i(\ell_i+1)}^{S_{i(\ell_i+1)}} = t \} \cap \bigcap_{\substack{s : \, (S_{i\ell_i}, s) \in E, \\ s \neq S_{i(\ell_i+1)}}} \{ T_{i(\ell_i+1)}^s \geq t \} \mid T_{i\ell_i}, S_{i\ell_i}), \\
+         &= \lambda_i^{S_{i(\ell_i+1)} \mid S_{i\ell_i}}\big(t \mid \theta, X_i, T_{i\ell_i}, b_i) \exp \Big(-\sum_{s : \, (S_{i\ell_i}, s) \in E} \Lambda_i^{s \mid S_{i\ell_i}}\big(t \mid b_i, X_i, T_{i\ell_i}, \theta)\Big).
     \end{align*}
 
     Combining both, we retrieve the same joint density.
@@ -814,7 +815,7 @@ The proof of the exactness of this algorithm is given below.
 
     The proof is short and relies on the fact that, using the semi-Markov property~\ref{ass:semi-markov}
     \begin{align*}
-    p\left( (T_{i(\ell+1)}, S_{i(\ell+1)})_{\ell \leq m_i - 1} \mid b_i, X_i, \theta \right) & = \prod_{\ell=0}^{m_i - 1} p\left( (T_{i(\ell+1)}, S_{i(\ell+1)}) \mid b_i, X_i, (T_{i\ell'}, S_{i\ell'})_{\ell' \leq \ell}, \theta \right), \\
+    p\left( (T_{i(\ell+1)}, S_{i(\ell+1)})_{\ell \leq m_i - 1} \mid b_i, X_i, \theta \right) &= \prod_{\ell=0}^{m_i - 1} p\left( (T_{i(\ell+1)}, S_{i(\ell+1)}) \mid b_i, X_i, (T_{i\ell'}, S_{i\ell'})_{\ell' \leq \ell}, \theta \right), \\
     &= \prod_{\ell=0}^{m_i - 1} p\left( (T_{i(\ell+1)}, S_{i(\ell+1)}) \mid b_i, X_i, (T_{i\ell}, S_{i\ell}), \theta \right).
     \end{align*}
 
@@ -822,7 +823,7 @@ The proof of the exactness of this algorithm is given below.
     \[
         \mathbb{P}(T_{i (m_i+1)} > C_i \mid \theta, X_i, (T_{im_i}, S_{im_i}), b_i) = \exp\left(-\sum_{s : \, (S_{im_i}, s) \in E} \Lambda_i^{s \mid S_{im_i}}(C_i \mid b_i, X_i, T_{im_i}, \theta)\right),
     \]
-    and so we recover the formula cited above, with the convention that an empty sum is $0$.
+    so we recover the formula cited above, with the convention that an empty sum is $0$.
 
 \end{proof}
 
@@ -831,7 +832,7 @@ The proof of the exactness of this algorithm is given below.
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{jmstate-model-main/figures/stochastic-optimization.pdf}
-    \caption{Evolution of the parameters during the optimization of the marginal $\log$-likelihood using stochastic gradient descent. The dotted lines correspond to the true values.}
+    \caption{Evolution of the parameters during the optimization of the marginal $\log$-likelihood using stochastic gradient ascent. The dotted lines correspond to the true values.}
     \label{fig:fitting-plots}
 \end{figure}
 
