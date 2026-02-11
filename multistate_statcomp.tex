@@ -2,7 +2,6 @@
 
 \usepackage{enumitem}
 \usepackage{graphicx}
-\usepackage{subcaption}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsfonts}
@@ -274,23 +273,20 @@ This formulation generalizes the joint likelihoods of \citet{wulfsohn1997joint} 
     \item[\textnormal{\textbf{Prior likelihood:}}]
         \[
             p(b_i \mid \theta) = \frac{(2 \pi)^{-q/2}}{\det(Q)^{1/2}}
-              \exp\left(-\tfrac{1}{2} b_i^T Q^{-1} b_i \right),
+              \exp\left( -\tfrac{1}{2} b_i^T Q^{-1} b_i \right),
         \]
 
     \item[\textnormal{\textbf{Longitudinal likelihood:}}]
         \begin{align*}
-           &p(Y_i \mid b_i, X_i, \theta) = \prod_{j = 1}^{n_i} \frac{(2 \pi)^{-d/2}}{\det(R)^{1/2}} \exp\left(-\tfrac{1}{2} \left(Y_{ij} - h(t_{ij}, \psi_i)\right)^T
-          R^{-1} \left(Y_{ij} - h(t_{ij}, \psi_i)\right)\right), \\
+           &p(Y_i \mid b_i, X_i, \theta) = \prod_{j = 1}^{n_i} \frac{(2 \pi)^{-d/2}}{\det(R)^{1/2}} \exp\left( -\tfrac{1}{2} \left(Y_{ij} - h(t_{ij}, \psi_i) \right)^T R^{-1} \left( Y_{ij} - h(t_{ij}, \psi_i) \right) \right), \\
            &\text{with } \psi_i = f(\gamma, X_i, b_i).
         \end{align*}
 
     \item[\textnormal{\textbf{Semi-Markov likelihood:}}]
           \begin{equation}
               \begin{aligned}
-                  p(\mathcal{T}_i \mid b_i, X_i, C_i, \theta) = &\prod_{l=0}^{m_i-1} p\left((T_{i(l+1)}, S_{i(l+1)}) \mid
-                  b_i, X_i, (T_{il}, S_{il}), \theta\right) \\
-                  &\exp\left(-\sum_{s : \, (S_{im_i}, s) \in E}
-                  \Lambda_i^{s \mid S_{im_i}} (C_i \mid b_i, X_i, T_{im_i}, \theta)\right).
+                  p(\mathcal{T}_i \mid b_i, X_i, C_i, \theta) = &\prod_{l=0}^{m_i-1} p\left((T_{i(l+1)}, S_{i(l+1)}) \mid b_i, X_i, (T_{il}, S_{il}), \theta\right) \\
+                  &\exp\left( -\sum_{s : \, (S_{im_i}, s) \in E} \Lambda_i^{s \mid S_{im_i}} (C_i \mid b_i, X_i, T_{im_i}, \theta) \right).
               \end{aligned}
               \label{ass:semi-markov}
           \end{equation}
@@ -308,7 +304,7 @@ Moreover, here, we assume that the initial state $S_{i0}$ is observed. However, 
 
 \subsection{Model Selection and Information Criteria}
 
-To compare competing model specifications, we rely on information criteria based on the marginal likelihood as defined in Section~\ref{sec:inference}. The Akaike Information Criterion (AIC) \citep{akaike2003new} and the Bayesian Information Criterion (BIC) \citep{schwarz1978estimating} are standard tools. While the AIC relies on an asymptotically unbiased estimator of the $\log$-likelihood, the BIC aims to identify the true model with high probability as the sample size grows.
+To compare competing model specifications, we rely on information criteria based on the marginal likelihood as defined in Section~\ref{sec:inference}. In practice, competing models are compared by selecting the specification that yields the smallest value of the chosen information criterion. For instance, the Akaike Information Criterion (AIC) \citep{akaike2003new} and the Bayesian Information Criterion (BIC) \citep{schwarz1978estimating} are standard tools. While the AIC relies on an asymptotically unbiased estimator of the $\log$-likelihood, the BIC aims to identify the true model with high probability as the sample size grows.
 
 The Akaike Information Criterion is computed as follows
 \[
@@ -335,7 +331,22 @@ Thus, our BIC criterion can be written as
 \mathrm{BIC}_\mathcal{I} \coloneqq -2 \log \mathcal{L}_\text{marginal}(\hat{\theta}; x) + \log \det \hat{\mathcal{I}}_n(\hat{\theta}).
 \]
 
-In both cases, one should aim to minimize the chosen criterion.
+In practice, with the notation of Section~\ref{sec:inference}, the marginal $\log$-likelihood
+\[
+\log \mathcal{L}_\text{marginal}(\theta; x)
+= \log \int \mathcal{L}_\text{complete}(\theta ; x, b) \, db
+\]
+is generally intractable in mixed effects and joint models, since the integral with respect to the latent variables does not admit a closed form. Although the gradient of the marginal $\log$-likelihood can be efficiently estimated using Fisher's identity, the marginal $\log$-likelihood itself cannot be evaluated directly. One possibility is therefore to estimate it using bridge sampling, which provides a consistent and accurate estimator of normalizing constants and marginal likelihoods based on Markov chain Monte Carlo output \citep{meng1996simulating, gronau2017bridgesampling}. 
+
+An alternative consists in approximating the posterior distribution $p(b \mid x, \hat{\theta})$ by a Gaussian distribution, for instance via a Laplace approximation. Using the entropy identity,
+\[
+\log \mathcal{L}_\text{marginal}(\hat{\theta}; x) = \mathbb{E}_{b \sim p(\cdot \mid x, \hat{\theta})}\left[ \log \mathcal{L}(\hat{\theta}; x, b) \right] - \mathbb{E}_{b \sim p(\cdot \mid x, \hat{\theta})}\left[ \log p(b \mid x, \hat{\theta}) \right],
+\]
+and replacing $p(b \mid x, \hat{\theta})$ by a Gaussian distribution with covariance matrix $\Sigma$, we obtain the approximation
+\[
+\log \mathcal{L}_\text{marginal}(\hat{\theta}; x) \approx \mathbb{E}_{b \mid x, \hat{\theta}}\left[ \log \mathcal{L}(\hat{\theta}; x, b) \right] - \frac{1}{2} \left( \log \det \Sigma + q\left( \log(2\pi) + 1 \right) \right),
+\]
+where $q$ denotes the dimension of the latent vector. This approximation replaces the intractable posterior entropy by the closed-form entropy of a Gaussian distribution.
 
 \section{Statistical Inference} \label{sec:inference}
 
@@ -354,7 +365,7 @@ Another approach requiring mild regularity assumptions on the $\log$ marginal li
 
 Under interchangeability of integral and differentiation, setting $x \coloneqq (X, Y, \mathcal{T}, C)$ for convenience, the Fisher identity writes
 \[
-    \nabla_\theta \log \mathcal{L}_\text{marginal}(\theta ; x) = \mathbb{E}_{b \sim p(\cdot \mid x, \theta)} \left(\nabla_\theta \log \mathcal{L}_{\text{complete}}(\theta ; x, b)\right).
+    \nabla_\theta \log \mathcal{L}_\text{marginal}(\theta ; x) = \mathbb{E}_{b \sim p(\cdot \mid x, \theta)}\left[ \nabla_\theta \log \mathcal{L}_{\text{complete}}(\theta ; x, b) \right].
 \]
 
 This expectation is approximated using Monte Carlo samples from the posterior $p(\cdot \mid x, \theta)$, avoiding the need to evaluate the intractable marginal likelihood $\mathcal{L}_\text{marginal}(\theta; x)$. To ensure the covariance matrices $Q$ and $R$ remain symmetric and positive-definite during optimization, we parametrize them using a $\log$-Cholesky decomposition of their inverse. By taking the logarithm of the diagonal elements of the Cholesky factors, we map the constrained covariance parameters to an unconstrained real-valued space, and avoid explicit matrix inversion for likelihood computation. This formulation naturally supports stochastic gradient ascent with MCMC-based posterior sampling and is amenable to minibatch parallelization across individuals, ensuring convergence to a critical point. The update rule is detailed in Algorithm~\ref{alg:sgd}.
@@ -393,25 +404,26 @@ For example, one can think of the state taken by the individual $i$ at a time $u
 
 Nonetheless, as seen in Algorithm~\ref{alg:trajectory-sim}, we are able to accurately simulate each trajectory. Therefore, a single or double Monte Carlo estimation scheme may be devised under certain restrictions, where we estimate $\chi^*(\mathcal{T}_i^*)$ by its conditional expected value
 \[
-    \hat{\chi}_i^{(1)} \coloneqq \mathbb{E}\left(\chi^*(\mathcal{T}'_i) \mid \mathcal{Y}_i(t), \mathcal{S}_i(t), \hat{\theta}\right) \approx \frac{1}{B} \sum_{k=1}^B \chi^*(\mathcal{T}_i^{(k)}), \, \mathcal{T}_i^{(k)} \overset{\text{i.i.d.}}{\sim} \mathscr{L}(\mathcal{T}_i^* \mid \mathcal{Y}(t), \mathcal{S}_i(t), \hat{\theta}).
+    \hat{\chi}_i^{(1)} \coloneqq \mathbb{E}\left[ \chi^*(\mathcal{T}'_i) \mid \mathcal{Y}_i(t), \mathcal{S}_i(t), \hat{\theta} \right] \approx \frac{1}{B} \sum_{k=1}^B \chi^*(\mathcal{T}_i^{(k)}), \, \mathcal{T}_i^{(k)} \overset{\text{i.i.d.}}{\sim} \mathscr{L}(\mathcal{T}_i^* \mid \mathcal{Y}(t), \mathcal{S}_i(t), \hat{\theta}),
 \]
+where the samples $\{ \mathcal{T}_i^{(k)} \}_{1 \leq k \leq B}$ are generated using a Markov chain Monte Carlo algorithm targeting the distribution $\mathscr{L}(b_i \mid \mathcal{Y}_i(t), \mathcal{S}_i(t), \hat{\theta})$ in conjunction with Algorithm~\ref{alg:trajectory-sim}.
 
 Another approach from Bayesian perspective treats the model parameters $\theta$ as random variables by imposing a prior distribution together with the training data $\mathcal{D}_n$ \citep{rizopoulos2011dynamic}, and thus in this case our new estimator may be defined
 \[
-    \hat{\chi}_i^{(2)} \coloneqq \mathbb{E}_{\theta' \sim \mathscr{L}(\theta \mid \mathcal{D}_n)}\left(\mathbb{E}\left(\chi^*(\mathcal{T}'_i) \mid \mathcal{Y}(t), \mathcal{S}_i(t), \theta'\right)\right),
+    \hat{\chi}_i^{(2)} \coloneqq \mathbb{E}_{\theta' \sim \mathscr{L}(\theta \mid \mathcal{D}_n)}\left[ \mathbb{E}\left[ \chi^*(\mathcal{T}'_i) \mid \mathcal{Y}(t), \mathcal{S}_i(t), \theta' \right] \right],
 \]
-and approximated by a double Monte Carlo accordingly.
+and approximated by a double Monte Carlo scheme accordingly.
 
 \bigbreak
 
 In general however, $\chi^*$ may very well depend on (countably) infinitely many transitions. As a result, since the proposed estimation relies on simulated samples, we require the quantity to depend only on a finite subset of transitions.
 
 \begin{assumption} \label{ass:simulatable}
-    There exists  $\chi: \bigcup_{n \geq 1} (\mathbb{R} \times V)^n \to \mathbb{Y}$ and $\tau_i$ a stopping time for the filtration $\mathcal{F}_{in} \coloneqq \sigma\left((T_{il}, S_{il})_{0 \leq \ell \leq n}\right)$ such that
+    There exists  $\chi: \bigcup_{n \geq 1} (\mathbb{R} \times V)^n \to \mathbb{Y}$ and $\tau_i$ a stopping time for the filtration $\mathcal{F}_{in} \coloneqq \sigma\left( (T_{il}, S_{il})_{0 \leq \ell \leq n} \right)$ such that
     \[
         \begin{cases}
             \tau_i < +\infty \text{ a.s.}, \\
-            \chi^*(\mathcal{T}_i^*) = \chi\left((T_{il}, S_{il})_{0 \leq \ell \leq \tau_i}\right)
+            \chi^*(\mathcal{T}_i^*) = \chi\left( (T_{il}, S_{il})_{0 \leq \ell \leq \tau_i} \right)
         \end{cases}
     \]
 \end{assumption}
@@ -430,7 +442,7 @@ Essentially, given Assumption~\ref{ass:simulatable}, with probability one we are
         \State Append simulated $(T_{in}, S_{in})$ to $\mathcal{T}_i$
         \State $n \gets n + 1$
         \EndWhile
-        \State \Return $\chi\left((T_{il}, S_{il})_{0 \leq \ell \leq \tau_i}\right)$
+        \State \Return $\chi\left( (T_{il}, S_{il})_{0 \leq \ell \leq \tau_i} \right)$
     \end{algorithmic}
 \end{algorithm}
 
@@ -550,24 +562,24 @@ The Figure \ref{fig:fitting-plots} shows the evolution of the parameters during 
     \centering
     \begin{tabular}{lcccc}
         \hline
-        Parameter             & True value & Mean     & Standard error & RMSE   \\
+        Parameter &True value &Mean &Standard error &RMSE \\
         \hline
-        $\gamma_1$            & 2.5000     & 2.4960   & 0.0370         & 0.0372 \\
-        $\gamma_2$            & -1.3000    & -1.3039  & 0.0257         & 0.0260 \\
-        $\gamma_3$            & 0.2000     & 0.1936   & 0.0267         & 0.0275 \\
-        $-\frac{1}{2} \log(Q_{11})$         & 0.2554     & 0.2243   & 0.0442         & 0.0540 \\
-        $-\frac{1}{2} \log(Q_{22})$         & 0.8047     & 0.8009   & 0.0260         & 0.0263 \\
-        $-\frac{1}{2} \log(Q_{33})$         & 0.6020     & 0.6001   & 0.0276         & 0.0277 \\
-        $-\frac{1}{2} \log(R)$           & -0.2653    & -0.2684  & 0.0083         & 0.0089 \\
-        $\alpha_1^{1 \mid 0}$ & -0.5000    & -0.49997 & 0.0486         & 0.0486 \\
-        $\alpha_2^{1 \mid 0}$ & -3.0000    & -2.9962  & 0.0800         & 0.0801 \\
-        $\alpha_1^{2 \mid 0}$ & -1.0000    & -0.9990  & 0.0847         & 0.0847 \\
-        $\alpha_2^{2 \mid 0}$ & -5.0000    & -4.9897  & 0.1191         & 0.1196 \\
-        $\alpha_1^{2 \mid 1}$ & 0.0000     & 0.0011   & 0.0327         & 0.0327 \\
-        $\alpha_2^{2 \mid 1}$ & -1.2000    & -1.2045  & 0.0429         & 0.0432 \\
-        $\beta^{1 \mid 0}$    & -1.3000    & -1.3015  & 0.0501         & 0.0501 \\
-        $\beta^{2 \mid 0}$    & -0.9000    & -0.8982  & 0.0670         & 0.0670 \\
-        $\beta^{2 \mid 1}$    & -0.7000    & -0.6981  & 0.0551         & 0.0551 \\
+        $\gamma_1$ &2.5000 &2.4960 &0.0370 &0.0372 \\
+        $\gamma_2$ &-1.3000 &-1.3039 &0.0257 &0.0260 \\
+        $\gamma_3$ &0.2000 &0.1936 &0.0267 &0.0275 \\
+        $-\frac{1}{2} \log(Q_{11})$ &0.2554 &0.2243 &0.0442 &0.0540 \\
+        $-\frac{1}{2} \log(Q_{22})$ &0.8047 &0.8009 &0.0260 &0.0263 \\
+        $-\frac{1}{2} \log(Q_{33})$ &0.6020 &0.6001 &0.0276 &0.0277 \\
+        $-\frac{1}{2} \log(R)$ &-0.2653 &-0.2684 &0.0083 &0.0089 \\
+        $\alpha_1^{1 \mid 0}$ &-0.5000 &-0.49997 &0.0486 &0.0486 \\
+        $\alpha_2^{1 \mid 0}$ &-3.0000 &-2.9962 &0.0800 &0.0801 \\
+        $\alpha_1^{2 \mid 0}$ &-1.0000 &-0.9990 &0.0847 &0.0847 \\
+        $\alpha_2^{2 \mid 0}$ &-5.0000 &-4.9897 &0.1191 &0.1196 \\
+        $\alpha_1^{2 \mid 1}$ &0.0000 &0.0011 &0.0327 &0.0327 \\
+        $\alpha_2^{2 \mid 1}$ &-1.2000 &-1.2045 &0.0429 &0.0432 \\
+        $\beta^{1 \mid 0}$ &-1.3000 &-1.3015 &0.0501 &0.0501 \\
+        $\beta^{2 \mid 0}$ &-0.9000 &-0.8982 &0.0670 &0.0670 \\
+        $\beta^{2 \mid 1}$ &-0.7000 &-0.6981 &0.0551 &0.0551 \\
         \hline
     \end{tabular}
     \caption{Comparison of true and estimated parameters (averaged over 100 runs).}
@@ -627,7 +639,7 @@ In the light of Figure~\ref{fig:paquid}, the regression and link
 functions were taken to be scaled and shifted hyperbolic tangent and its derivative respectively such that the normalized MMSE score always has a value of $1$ when $t \to -\infty$ and is not increasing
 \[
     \begin{cases}
-        h(t, \psi) = \psi_1 \tanh\left(\frac{\psi_3 - t}{\psi_2}\right) + (1 - \psi_1), \\
+        h(t, \psi) = \psi_1 \tanh\left( \frac{\psi_3 - t}{\psi_2} \right) + (1 - \psi_1), \\
         g(t, \psi) = \frac{\partial}{\partial t} h, \\ 
         \psi =
         \begin{pmatrix}
@@ -638,7 +650,7 @@ functions were taken to be scaled and shifted hyperbolic tangent and its derivat
     \end{cases}
 \]
 
-At last, individual covariates correspond to a pair of binary variables indicating whether or not the individual has a diploma and is a male $\left(\mathds{1}_\text{CEP}(i), \mathds{1}_\text{male}(i)\right) \in \{0, 1\}^2$.
+At last, individual covariates correspond to a pair of binary variables indicating whether or not the individual has a diploma and is a male $\left( \mathds{1}_\text{CEP}(i), \mathds{1}_\text{male}(i) \right) \in \{0, 1\}^2$.
 
 \subsection{Results}
 
@@ -802,15 +814,15 @@ The proof of the exactness of this algorithm is given below.
 
     The proof is short and relies on the fact that, using the semi-Markov property~\ref{ass:semi-markov}
     \begin{align*}
-    p\left((T_{i(\ell+1)}, S_{i(\ell+1)})_{\ell \leq m_i - 1} \mid b_i, X_i, \theta\right) & = \prod_{\ell=0}^{m_i - 1} p\left((T_{i(\ell+1)}, S_{i(\ell+1)}) \mid b_i, X_i, (T_{i\ell'}, S_{i\ell'})_{\ell' \leq \ell}, \theta\right), \\
-    &= \prod_{\ell=0}^{m_i - 1} p\left((T_{i(\ell+1)}, S_{i(\ell+1)}) \mid b_i, X_i, (T_{i\ell}, S_{i\ell}), \theta\right).
+    p\left( (T_{i(\ell+1)}, S_{i(\ell+1)})_{\ell \leq m_i - 1} \mid b_i, X_i, \theta \right) & = \prod_{\ell=0}^{m_i - 1} p\left( (T_{i(\ell+1)}, S_{i(\ell+1)}) \mid b_i, X_i, (T_{i\ell'}, S_{i\ell'})_{\ell' \leq \ell}, \theta \right), \\
+    &= \prod_{\ell=0}^{m_i - 1} p\left( (T_{i(\ell+1)}, S_{i(\ell+1)}) \mid b_i, X_i, (T_{i\ell}, S_{i\ell}), \theta \right).
     \end{align*}
 
     On the other hand, the probability that no additional event is observed between $T_{im_i}$ and $C_i$ is $1$ if the last state reached is absorbing, and otherwise
     \[
         \mathbb{P}(T_{i (m_i+1)} > C_i \mid \theta, X_i, (T_{im_i}, S_{im_i}), b_i) = \exp\left(-\sum_{s : \, (S_{im_i}, s) \in E} \Lambda_i^{s \mid S_{im_i}}(C_i \mid b_i, X_i, T_{im_i}, \theta)\right),
     \]
-    and so we recover the formula cited above with the convention that an empty sum is $0$.
+    and so we recover the formula cited above, with the convention that an empty sum is $0$.
 
 \end{proof}
 
@@ -818,53 +830,8 @@ The proof of the exactness of this algorithm is given below.
 
 \begin{figure}[H]
     \centering
-    \vspace{-1.7em}
-    \begin{subfigure}{0.3\textwidth}
-        \includegraphics[width=0.99\linewidth]{figures/gamma.pdf}
-        \caption{$\gamma$}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}{0.3\textwidth}
-        \includegraphics[width=0.99\linewidth]{figures/Q.pdf}
-        \caption{$Q$}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}{0.3\textwidth}
-        \includegraphics[width=0.99\linewidth]{figures/R.pdf}
-        \caption{$R$}
-    \end{subfigure}
-    \\[-0.3em]
-    \begin{subfigure}{0.3\textwidth}
-        \includegraphics[width=0.99\linewidth]{figures/alphas01.pdf}
-        \caption{$\alpha^{1 \mid 0}$}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}{0.3\textwidth}
-        \includegraphics[width=0.99\linewidth]{figures/alphas02.pdf}
-        \caption{$\alpha^{2 \mid 0}$}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}{0.3\textwidth}
-        \includegraphics[width=0.99\linewidth]{figures/alphas12.pdf}
-        \caption{$\alpha^{2 \mid 1}$}
-    \end{subfigure}
-    \\[-0.3em]
-    \begin{subfigure}{0.3\textwidth}
-        \includegraphics[width=0.99\linewidth]{figures/betas01.pdf}
-        \caption{$\beta^{1 \mid 0}$}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}{0.3\textwidth}
-        \includegraphics[width=0.99\linewidth]{figures/betas02.pdf}
-        \caption{$\beta^{2 \mid 0}$}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}{0.3\textwidth}
-        \includegraphics[width=0.99\linewidth]{figures/betas12.pdf}
-        \caption{$\beta^{2 \mid 1}$}
-    \end{subfigure}
-
-    \caption{Evolution of the parameters during the optimization of the marginal log-likelihood using stochastic gradient descent. The dotted lines correspond to the true values.}
+    \includegraphics[width=\textwidth]{jmstate-model-main/figures/stochastic-optimization.pdf}
+    \caption{Evolution of the parameters during the optimization of the marginal $\log$-likelihood using stochastic gradient descent. The dotted lines correspond to the true values.}
     \label{fig:fitting-plots}
 \end{figure}
 
