@@ -326,7 +326,7 @@ Under interchangeability of integral and differentiation, setting $x \coloneqq (
     \nabla_\theta \log \mathcal{L}_\mathrm{marginal}(\theta ; x) = \mathbb{E}_{b \sim p(\cdot \mid x, \theta)}\left[ \nabla_\theta \log \mathcal{L}_{\mathrm{complete}}(\theta ; x, b) \right].
 \]
 
-This expectation is approximated using Monte Carlo samples from the posterior $p(\cdot \mid x, \theta)$, avoiding the need to evaluate the intractable marginal likelihood $\mathcal{L}_\mathrm{marginal}(\theta; x)$. To ensure the covariance matrices $Q$ and $R$ remain symmetric and positive-definite during optimization, we parametrize them using a $\log$-Cholesky decomposition of their inverse. By taking the logarithm of the diagonal elements of the Cholesky factors, we map the constrained covariance parameters to an unconstrained real-valued space, and avoid explicit matrix inversion for likelihood computation. This formulation naturally supports stochastic gradient ascent with Markov Chain Monte Carlo (MCMC)-based posterior sampling and is amenable to minibatch parallelization across individuals, ensuring convergence to a critical point. The update rule is detailed in Algorithm~\ref{alg:sgd}.
+This expectation is approximated using Monte Carlo samples from the posterior $p(\cdot \mid x, \theta)$, avoiding the need to evaluate the intractable marginal likelihood $\mathcal{L}_\mathrm{marginal}(\theta; x)$. To ensure the covariance matrices $Q$ and $R$ remain symmetric and positive-definite during optimization, we parametrize them using a $\log$-Cholesky decomposition of their inverse. By taking the logarithm of the diagonal elements of the Cholesky factors, we map the constrained covariance parameters to an unconstrained real-valued space, and avoid explicit matrix inversion for likelihood computation. This formulation naturally supports stochastic gradient ascent with Markov Chain Monte Carlo (MCMC)-based posterior sampling and enables parallelization across individuals, ensuring convergence to a critical point. The update rule is detailed in Algorithm~\ref{alg:sgd}.
 
 \begin{algorithm}[H]
     \caption{Stochastic gradient ascent model inference}
@@ -334,11 +334,11 @@ This expectation is approximated using Monte Carlo samples from the posterior $p
 
     \begin{algorithmic}[1]
         \algrenewcommand\algorithmicrequire{\textbf{Input:}}
-        \Require data $x$; initial parameters $\theta^{(0)}$; step sizes $(\eta_t)_{t \geq 0}$ with $\sum_t \eta_t = +\infty$, $\sum_t \eta_t^2 < +\infty$; batch size $K$; sampler $p^{\mathrm{MCMC}}$; stopping criterion.
+        \Require data $x$; initial parameters $\theta^{(0)}$; step sizes $(\eta_t)_{t \geq 0}$ with $\sum_t \eta_t = +\infty$, $\sum_t \eta_t^2 < +\infty$; number of parallel chains $K$; MCMC samplers $(p_k^{\mathrm{MCMC}})_{1 \leq k \leq K}$; stopping criterion.
         \Statex
         \State $t \gets 0$
         \While{not converged}
-        \State Draw $b_k \sim p(\cdot \mid x, \theta^{(t)}) \approx p^\mathrm{MCMC}$.
+        \State For each $k \in \{ 1, \dots, K \}$, draw $b_k \sim p(\cdot \mid x, \theta^{(t)}) \approx p_k^\mathrm{MCMC}$.
         \State $\theta^{(t+1)} \gets \theta^{(t)} + \frac{\eta_t}{K} \sum_{k=1}^K \nabla_\theta \log \mathcal{L}_\mathrm{complete} (\theta^{(t)} ; x, b_k)$.
         \State $t \gets t + 1$
         \EndWhile
@@ -377,7 +377,7 @@ Thus, our BIC criterion can be written as
 \mathrm{BIC}_\mathcal{I} \coloneqq -2 \log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; x) + \log \det \hat{\mathcal{I}}_n(\hat{\theta}).
 \]
 
-In practice, as previously noted, the marginal $\log$-likelihood
+However, as previously noted, the marginal $\log$-likelihood
 \[
 \log \mathcal{L}_\mathrm{marginal}(\theta; x)
 = \log \int \mathcal{L}_\mathrm{complete}(\theta ; x, b) \, db
