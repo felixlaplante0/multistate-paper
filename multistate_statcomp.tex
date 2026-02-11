@@ -338,17 +338,26 @@ In practice, with the notation of Section~\ref{sec:inference}, the marginal $\lo
 \log \mathcal{L}_\mathrm{marginal}(\theta; x)
 = \log \int \mathcal{L}_\mathrm{complete}(\theta ; x, b) \, db
 \]
-is generally intractable in mixed effects and joint models, since the integral with respect to the latent variables does not admit a closed form. Although the gradient of the marginal $\log$-likelihood can be efficiently estimated using Fisher's identity, the marginal $\log$-likelihood itself cannot be evaluated directly. One possibility is therefore to estimate it using bridge sampling, which provides a consistent and accurate estimator of normalizing constants and marginal likelihoods based on Markov chain Monte Carlo output \citep{meng1996simulating, gronau2017tutorial}. 
+is generally intractable in mixed effects and joint models, since the integral with respect to the latent variables does not admit a closed form. Although the gradient of the marginal $\log$-likelihood can be efficiently estimated using Fisher's identity, the marginal $\log$-likelihood itself cannot be evaluated directly. One possibility is therefore to estimate it using bridge sampling, which provides a consistent and accurate estimator of normalizing constants and marginal likelihoods based on Markov chain Monte Carlo (MCMC) output \citep{meng1996simulating, gronau2017tutorial}. 
 
 An alternative consists in approximating the posterior distribution $p(b \mid x, \hat{\theta})$ by a Gaussian distribution, for instance via a Laplace approximation. Using the entropy identity,
 \[
-\log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; x) = \mathbb{E}_{b \sim p(\cdot \mid x, \hat{\theta})}\left[ \log \mathcal{L}(\hat{\theta}; x, b) \right] - \mathbb{E}_{b \sim p(\cdot \mid x, \hat{\theta})}\left[ \log p(b \mid x, \hat{\theta}) \right],
+\log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; x) = \mathbb{E}_{b \sim p(\cdot \mid x, \hat{\theta})}\left[ \log \mathcal{L}(\hat{\theta}; x, b) \right] - \mathbb{E}_{b \sim p(\cdot \mid x, \hat{\theta})}\left[ \log p(b \mid x, \hat{\theta}) \right].
 \]
-and replacing $p(b \mid x, \hat{\theta})$ by a Gaussian distribution with covariance matrix $\Sigma$, we obtain the approximation
+
+Furthermore, leveraging independence across individuals, the entropy term decomposes as
 \[
-\log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; x) \approx \mathbb{E}_{b \mid x, \hat{\theta}}\left[ \log \mathcal{L}(\hat{\theta}; x, b) \right] - \frac{1}{2} \left( \log \det \Sigma + q\left( \log(2\pi) + 1 \right) \right),
+\mathbb{E}_{b \sim p(\cdot \mid x, \hat{\theta})}\left[ \log p(b \mid x, \hat{\theta}) \right] = \sum_{i=1}^n \mathbb{E}_{b_i \sim p(\cdot \mid x_i, \hat{\theta})}\left[ \log p(b_i \mid x_i, \hat{\theta}) \right].
 \]
-where $q$ denotes the dimension of the latent vector. This approximation replaces the intractable posterior entropy by the closed-form entropy of a Gaussian distribution.
+
+Approximating each $p(b_i \mid x, \hat{\theta})$ by a Gaussian distribution with covariance matrix $\Sigma_i$, we obtain
+\[
+\log \mathcal{L}_\mathrm{marginal}(\hat{\theta}; x) \approx \mathbb{E}_{b \mid x, \hat{\theta}}\left[ \log \mathcal{L}(\hat{\theta}; x, b) \right] + \sum_{i=1}^n \underbrace{\frac{1}{2} \left( \log \det \Sigma_i + q\left( \log(2\pi) + 1 \right) \right)}_{H_i},
+\]
+where $q$ denotes the dimension of the latent vector.
+
+This approximation replaces the intractable posterior entropy with a sum of closed-form entropies of $q$-dimensional Gaussian distributions. Furthermore, each term $H_i$ depends only on its corresponding covariance matrix $\Sigma_i$, which can be easily estimated from MCMC samples of the latent variables using the empirical covariance estimator.
+
 
 \section{Statistical Inference} \label{sec:inference}
 
@@ -356,7 +365,7 @@ The estimation of model parameters $\theta = (\gamma, Q, R, \alpha, \beta)$ reli
 \[
     \mathcal{L}_\mathrm{marginal}(\theta ; X, Y, \mathcal{T}, C) = \int \mathcal{L}_\mathrm{complete}(\theta; X, Y, \mathcal{T}, C, b) \,db,
 \]
-where
+where $b \coloneqq (b_1, \dots, b_n)$ and
 \[
     \mathcal{L}_\mathrm{complete}(\theta  ; X, Y, \mathcal{T}, C, b) = \prod_{i=1}^n p(Y_i \mid b_i, X_i, \theta) \, p(\mathcal{T}_i \mid b_i, X_i, C_i, \theta) \, p(b_i \mid \theta).
 \]
@@ -408,7 +417,7 @@ Nonetheless, as seen in Algorithm~\ref{alg:trajectory-sim}, we are able to accur
 \[
     \hat{\chi}_i^{(1)} \coloneqq \mathbb{E}\left[ \chi^*(\mathcal{T}'_i) \mid \mathcal{Y}_i(t), \mathcal{S}_i(t), \hat{\theta} \right] \approx \frac{1}{B} \sum_{k=1}^B \chi^*(\mathcal{T}_i^{(k)}), \, \mathcal{T}_i^{(k)} \overset{\mathrm{i.i.d.}}{\sim} \mathscr{L}(\mathcal{T}_i^* \mid \mathcal{Y}(t), \mathcal{S}_i(t), \hat{\theta}),
 \]
-where the samples $\{ \mathcal{T}_i^{(k)} \}_{1 \leq k \leq B}$ are generated using a Markov chain Monte Carlo algorithm targeting the distribution $\mathscr{L}(b_i \mid \mathcal{Y}_i(t), \mathcal{S}_i(t), \hat{\theta})$ in conjunction with Algorithm~\ref{alg:trajectory-sim}.
+where the samples $\{ \mathcal{T}_i^{(k)} \}_{1 \leq k \leq B}$ are generated using a MCMC algorithm targeting the distribution $\mathscr{L}(b_i \mid \mathcal{Y}_i(t), \mathcal{S}_i(t), \hat{\theta})$ in conjunction with Algorithm~\ref{alg:trajectory-sim}.
 
 Another approach from Bayesian perspective treats the model parameters $\theta$ as random variables by imposing a prior distribution together with the training data $\mathcal{D}_n$ \citep{rizopoulos2011dynamic}, and thus in this case our new estimator may be defined
 \[
