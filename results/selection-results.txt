@@ -1,3 +1,0 @@
-,AIC,BIC
-equal,81,92
-more,19,8
