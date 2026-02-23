@@ -8,10 +8,10 @@ format:
 stateDiagram-v2
     direction LR
 
-    state "State 0<br>No dependency" as S0
-    state "State 1<br>Mild dependency" as S1
-    state "State 2<br>Moderate dependency" as S2
-    state "State 3<br>Severe dependency" as S3
+    state "No dependency (0)" as S0
+    state "Mild dependency (1)" as S1
+    state "Moderate dependency (2)" as S2
+    state "Severe dependency (3)" as S3
 
     S0 --> S1
     S1 --> S2
