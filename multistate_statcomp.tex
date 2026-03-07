@@ -232,7 +232,7 @@ Two baseline hazard conventions are common and can be specified as
 \[
     \lambda_0^{k \to k'}(t_0, t) =
     \begin{cases}
-        \lambda_0^{k \to k'}(t_0, t) &\text{(clock-reset)},   \\
+        \lambda_0^{k \to k'}(t - t_0) &\text{(clock-reset)},   \\
         \lambda_0^{k \to k'}(t)  &\text{(clock-forward)}.
     \end{cases}
 \]
@@ -505,7 +505,7 @@ This simulation-based dynamic prediction framework generalizes classical approac
 
 The purpose of this simulation study is to evaluate the finite-sample performance and convergence properties of the proposed inference algorithm under controlled conditions where the true parameters are known. We simulate data from a three-state semi-Markov process coupled with a nonlinear longitudinal biomarker trajectory, representing a simplified disease progression model. This setup allows us to assess both statistical estimation error (see Table~\ref{tbl:convergence-rmse}) and computational scalability of the stochastic gradient estimation procedure. We further evaluate the model selection performance of the proposed methodology, as outlined in Subsection~\ref{subsec:criteria}. To ensure statistical reliability, we perform $n_\mathrm{runs} = 100$ independent simulations on datasets, comprised of $n = 500$ individuals, generated from the same underlying distribution.
 
-All simulations, estimations, and figures reported in this section were produced using the open-source \texttt{jmstate} Python package version 0.15.2, available on \href{https://pypi.org/project/jmstate/}{PyPI}, which we developed to implement the multi-state joint modeling framework and inference algorithms described in Sections~\ref{sec:model} and~\ref{sec:inference}.
+All simulations, estimations, and figures reported in this section were produced using the open-source \texttt{jmstate} Python package version 0.16.0 available on \href{https://pypi.org/project/jmstate/}{PyPI}, which we developed to implement the multi-state joint modeling framework and inference algorithms described in Sections~\ref{sec:model} and~\ref{sec:inference}.
 
 \subsection{Model Specification}
 
@@ -684,7 +684,7 @@ In this study, the full dataset was used to estimate the inferential results pre
 
 \subsubsection{Inference} \label{subsec:paquid-inference}
 
-The model was fitted on the complete dataset using the Adam optimizer and the optimization process was run until convergence based on the Equation~\ref{eq:stop} as in the simulation study. The Fisher Information Matrix was computed, implementing the method described in \cite{baey2023efficient}. The standard errors were then computed as the square root of the diagonal of the inverse of the Fisher Information Matrix. Since, under the chosen parametrization, the value $0$ lies in the interior of the admissible parameter space, Wald statistics can be used to test the nullity of each coefficient through the usual asymptotic normal approximation. However, we report only the significance results for the linear coefficients coefficients in either the covariates or the link functions, as they allow a direct interpretation. They are indicated in bold in the summarized Table~\ref{tbl:paquid-fit}. The optimization process itself is provided in the Appendix (see Figure~\ref{fig:paquid-plots}).
+The model was fitted on the complete dataset using the Adam optimizer and the optimization process was run until convergence based on the Equation~\ref{eq:stop} as in the simulation study. The Fisher Information Matrix was computed, implementing the method described in \cite{baey2023efficient}. The standard errors were then computed as the square root of the diagonal of the inverse of the Fisher Information Matrix. Since, under the chosen parametrization, the value $0$ lies in the interior of the admissible parameter space, Wald statistics can be used to test the nullity of each coefficient through the usual asymptotic normal approximation. However, we report only the significance results for the linear coefficients  in either the covariates or the link functions, as they allow a direct interpretation. They are indicated in bold in the summarized Table~\ref{tbl:paquid-fit}. The optimization process itself is provided in the Appendix (see Figure~\ref{fig:paquid-plots}).
 
 \begin{figure}[H]
     \centering
@@ -883,7 +883,7 @@ so we recover the formula cited above, with the convention that an empty sum is 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{figures/stochastic-optimization.pdf}
+    \includegraphics[width=\textwidth]{figures/simulated-optimization.pdf}
     \caption{Evolution of the parameters during the optimization of the marginal $\log$-likelihood using stochastic gradient ascent. Dotted horizontal lines correspond to the true values, while vertical lines mark the start of each window used to evaluate the stopping criterion.}
     \label{fig:fitting-plots}
 \end{figure}
